@@ -1,0 +1,45 @@
+[credential]
+	helper = manager
+
+# This is Git's per-user configuration file.
+[user]
+# Please adapt and uncomment the following lines:
+	name = Dmitry Avtonomov
+	email = dmt.avt@gmail.com
+[color]
+    ui = true
+    interactive = auto
+
+[include]
+    path = .gitaliases
+    path = .gitmorealiases
+
+# [merge]
+# 	tool = extMerge
+# [mergetool "p4merge"]
+# 	cmd = p4merge.exe $PWD/$BASE $PWD/$LOCAL $PWD/$REMOTE $PWD/$MERGED
+# 	trustExitCode = false
+# 	keepBackup = false
+# [mergetool "extMerge"]
+# 	cmd = extMerge $PWD/$BASE $PWD/$LOCAL $PWD/$REMOTE $PWD/$MERGED
+# 	trustExitCode = false
+# 	keepBackup = false
+# [diff]
+# 	external = extDiff
+
+[merge]
+	tool = p4merge
+[mergetool "p4merge"]
+	path = p4merge.exe
+[diff]
+	tool = p4merge
+[difftool "p4merge"]
+	path = p4merge.exe
+[core]
+	autocrlf = false
+	excludesfile = ~/.gitignore_global
+[credential]
+	helper = manager
+[gui]
+	encoding = utf-8
+	

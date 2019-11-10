@@ -1,0 +1,80 @@
+[alias]
+
+  # template/stub for functional git aliases
+  # my_alias = "!f() { 〈your complex command〉 }; f"
+
+  # edit git config with default text editor
+  ec = config --global -e
+
+  # run before each commit :)
+  pre = diff --cached --diff-algorithm=minimal -w
+
+  # {add all commit message} commit all changed/new files with a message
+  # this is the same as 'savem' alias
+  aacm = !git add -A && git commit -m 
+
+  fa = fetch --all
+  up = !git pull --rebase --prune $@ && git submodule update --init --recursive
+  
+  # push everything including tags to default remote
+  pt = !git push && git push --tags
+  
+  # push branch to several remotes
+  ptr = "!f() { \
+    for remote in "$@"; do git push "$remote"; done \
+  }; f"
+
+  # push branch and tags to several remotes
+  pttt = "!f() { \
+    for remote in "$@"; do git push && git push --tags "$remote"; done \
+  }; f"
+
+  cob = checkout -b
+  
+  # save work as it goes, see 'undo' to use in tandem
+  save = !git add -A && git commit -m 'SAVEPOINT'
+  # same as 'aacm'
+  savem = !git add -A && git commit -m 
+  wip = commit -am "WIP"
+
+  # reset to the previous commit, leaving changes in the work tree
+  # this is useful in combination with aliases 'save' and 'wip'
+  undo = reset HEAD~1 --mixed
+
+  amend = commit -a --amend
+
+  # commit, amend all
+  caa = commit -a --amend -C HEAD
+
+  # a proper reset, that doesn't immediately make you loose everything
+  # you can still retrieve the changes from reflog
+  wipe = !git add -A && git commit -qm 'WIPE SAVEPOINT' && git reset HEAD~1 --hard
+
+  # delete all local branches that have been merged into master (or the 
+  # branch that you specify as the argument to this alias)
+  # ${1-master} in shell script means: $1 (the 1st arguemnt) or default to 'master' if $1 not set
+  bclean = "!f() { git checkout ${1-master} && git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs git branch -d; }; f"
+  bdone = "!f() { git checkout ${1-master} && git up && git bclean ${1-master}; }; f"
+
+  # Delete a branch/tag both locally and remotely
+  nuke-on = "!f() { \
+      git push ${1} :$2; \
+      git branch -d $2; \
+      git tag -d $2; \
+  }; f"
+  
+
+  # Delete a tag both locally and remotely (by default on Origin)
+  nuke = "!f() { \
+      git push origin --delete "$@"; \
+      git branch -d "$@"; \
+      git tag -d "$@"; \
+  }; f"
+
+  # same as 'nuke'
+  nuke-on-origin = "!f() { \
+      git push origin --delete "$@"; \
+      git branch -d "$@"; \
+      git tag -d "$@"; \
+  }; f"
+  
