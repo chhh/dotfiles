@@ -11,6 +11,7 @@ fi
 # Saves typing the ssh key password every time you interact with
 # a remote repo.
 
+key_file=~/.ssh/dmtavt-home-desktop_rsa
 env=~/.ssh/agent.env
 
 agent_load_env () { test -f "$env" && . "$env" >| /dev/null ; }
@@ -26,9 +27,9 @@ agent_run_state=$(ssh-add -l >| /dev/null 2>&1; echo $?)
 
 if [ ! "$SSH_AUTH_SOCK" ] || [ $agent_run_state = 2 ]; then
     agent_start
-    ssh-add
+    ssh-add $key_file
 elif [ "$SSH_AUTH_SOCK" ] && [ $agent_run_state = 1 ]; then
-    ssh-add
+    ssh-add $key_file
 fi
 
 unset env
