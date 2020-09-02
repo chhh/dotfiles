@@ -25,6 +25,7 @@
 
 [core]
 	autocrlf = true
+	longpaths = true
 	excludesfile = ~/.gitignore_global
 [credential]
 	helper = manager
