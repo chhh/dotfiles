@@ -78,3 +78,8 @@
       git tag -d "$@"; \
   }; f"
   
+  # 'fast-forward tracking' branches except for the checked out one, for this use `git pull --ff-only` or just `ff`
+  fft = !sh -c 'git branch --format \"%(if)%(upstream:short)%(then)git push . %(upstream:short):%(refname:short)%(end)\" | sh' -
+  ff = pull --ff-only
+
+  
