@@ -11,23 +11,36 @@
     path = .gitaliases
     path = .gitmorealiases
 
-[diff]
-	tool = meld
-[difftool "meld"]
-	# cmd = meld "$REMOTE" "$LOCAL"
-	cmd = meld "$LOCAL" "$REMOTE"
-[merge]
-    tool = meld
-[mergetool "meld"]
-    # Choose one of these 2 lines (not both!)
-    # cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
-    cmd = meld "$LOCAL" "$BASE" "$REMOTE" --output "$MERGED"
-
 [core]
 	autocrlf = true
 	longpaths = true
 	excludesfile = ~/.gitignore_global
+	editor = 'C:/Program Files/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin
+
 [credential]
 	helper = manager
+
 [gui]
 	encoding = utf-8
+
+# old config for meld as diff/merge tool
+# [diff]
+# 	tool = meld
+# [difftool "meld"]
+# 	# cmd = meld "$REMOTE" "$LOCAL"
+# 	cmd = meld "$LOCAL" "$REMOTE"
+# [merge]
+#     tool = meld
+# [mergetool "meld"]
+#     # Choose one of these 2 lines (not both!)
+#     # cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
+#     cmd = meld "$LOCAL" "$BASE" "$REMOTE" --output "$MERGED"
+
+[merge]
+	tool = p4merge
+[mergetool "p4merge"]
+	path = p4merge.exe
+[diff]
+	tool = p4merge
+[difftool "p4merge"]
+	path = p4merge.exe
