@@ -36,6 +36,7 @@
   # same as 'aacm'
   savem = !git add -A && git commit -m 
   wip = commit -am "WIP"
+  svp = !git save && git push
 
   # reset to the previous commit, leaving changes in the work tree
   # this is useful in combination with aliases 'save' and 'wip'
@@ -63,6 +64,12 @@
       git tag -d $2; \
   }; f"
   
+  # Delete tags matching pattern both locally and remotely. $1 - remote, $2 - pattern
+  # nuke-tags-on = "!f() { \
+  #     git push -d $; \
+  #     git branch -d $2; \
+  #     git tag -d $2; \
+  # }; f"
 
   # Delete a tag both locally and remotely (by default on Origin)
   nuke = "!f() { \
@@ -77,9 +84,8 @@
       git branch -d "$@"; \
       git tag -d "$@"; \
   }; f"
-  
+
   # 'fast-forward tracking' branches except for the checked out one, for this use `git pull --ff-only` or just `ff`
   fft = !sh -c 'git branch --format \"%(if)%(upstream:short)%(then)git push . %(upstream:short):%(refname:short)%(end)\" | sh' -
   ff = pull --ff-only
-
   
