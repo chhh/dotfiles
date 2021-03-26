@@ -6,6 +6,9 @@ if [[ -n "${ConEmuPID}" ]]; then
   PS1="$PS1\[\e]9;9;\"\w\"\007\e]9;12\007\]"
 fi
 
+if [ -e $HOME/.bash_aliases ]; then
+    source $HOME/.bash_aliases
+fi
 
 # This is used to start ssh-agent once when git-bash is started.
 # Saves typing the ssh key password every time you interact with
