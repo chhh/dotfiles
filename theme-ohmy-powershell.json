@@ -5,18 +5,6 @@
       "alignment": "left",
       "segments": [
         {
-          "background": "#c386f1",
-          "foreground": "#ffffff",
-          "leading_diamond": "",
-          "properties": {
-            "display_host": false,
-            "postfix": " "
-          },
-          "style": "diamond",
-          "trailing_diamond": "",
-          "type": "session"
-        },
-        {
           "background": "#ff479c",
           "foreground": "#ffffff",
           "powerline_symbol": "",
@@ -80,19 +68,6 @@
           "type": "julia"
         },
         {
-          "background": "#FFDE57",
-          "foreground": "#111111",
-          "powerline_symbol": "",
-          "properties": {
-            "display_mode": "files",
-            "display_version": true,
-            "display_virtual_env": false,
-            "prefix": "  "
-          },
-          "style": "powerline",
-          "type": "python"
-        },
-        {
           "background": "#AE1401",
           "foreground": "#ffffff",
           "powerline_symbol": "",
@@ -145,7 +120,9 @@
           "foreground": "#ffffff",
           "leading_diamond": "",
           "properties": {
-            "always_enabled": true,
+            "always_enabled": false,
+            "threshold": 500,
+            "style": "round",
             "prefix": "<transparent></> 羽"
           },
           "style": "plain",
@@ -159,7 +136,7 @@
           "properties": {
             "always_enabled": true,
             "color_background": true,
-            "display_exit_code": false,
+            "display_exit_code": true,
             "error_color": "#f1184c",
             "prefix": "<#83769c></> "
           },
@@ -173,16 +150,6 @@
     {
       "segments": [
         {
-          "background": "#0077c2",
-          "foreground": "#ffffff",
-          "properties": {
-            "postfix": " <transparent,#0077c2></>",
-            "prefix": "<#0077c2,transparent></>  "
-          },
-          "style": "plain",
-          "type": "shell"
-        },
-        {
           "background": "#1BD760",
           "foreground": "#111111",
           "invert_powerline": true,
@@ -194,25 +161,6 @@
           },
           "style": "powerline",
           "type": "ytm"
-        },
-        {
-          "background": "#f36943",
-          "foreground": "#ffffff",
-          "invert_powerline": true,
-          "powerline_symbol": "",
-          "properties": {
-            "battery_icon": "",
-            "charged_color": "#4caf50",
-            "charged_icon": " ",
-            "charging_color": "#40c4ff",
-            "charging_icon": " ",
-            "color_background": true,
-            "discharging_color": "#ff5722",
-            "discharging_icon": " ",
-            "postfix": " "
-          },
-          "style": "powerline",
-          "type": "battery"
         },
         {
           "background": "#2e9599",
