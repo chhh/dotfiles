@@ -1,0 +1,22 @@
+{
+    "workbench.colorTheme": "Monokai",
+    "workbench.editorAssociations": [
+    
+    ],
+    
+    // Line width guides
+    "editor.rulers": [
+        80, 120
+    ],
+    
+    // Explorer indents and style
+    "workbench.tree.indent": 20,
+    "workbench.tree.renderIndentGuides": "always",
+    "workbench.colorCustomizations": {
+        "tree.indentGuidesStroke": "#ff0000",
+        // Colors for currently selected tab
+        "tab.activeBorder": "#0A84FF",
+        "tab.activeBorderTop": "#c505df",
+        "tab.unfocusedActiveBorder": "#000000"
+    },
+}
