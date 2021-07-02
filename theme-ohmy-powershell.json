@@ -150,26 +150,14 @@
     {
       "segments": [
         {
-          "background": "#1BD760",
-          "foreground": "#111111",
-          "invert_powerline": true,
-          "powerline_symbol": "",
-          "properties": {
-            "paused_icon": " ",
-            "playing_icon": " ",
-            "prefix": "  "
-          },
-          "style": "powerline",
-          "type": "ytm"
-        },
-        {
           "background": "#2e9599",
           "foreground": "#111111",
           "invert_powerline": true,
           "leading_diamond": "",
           "style": "diamond",
           "trailing_diamond": "",
-          "type": "time"
+          "type": "time",
+          "time_format": "15:04:05"
         }
       ],
       "type": "rprompt"
