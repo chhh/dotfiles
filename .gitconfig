@@ -36,11 +36,53 @@
 #     # cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
 #     cmd = meld "$LOCAL" "$BASE" "$REMOTE" --output "$MERGED"
 
-[merge]
-	tool = p4merge
-[mergetool "p4merge"]
-	path = p4merge.exe
+
 [diff]
-	tool = p4merge
-[difftool "p4merge"]
-	path = p4merge.exe
+    tool = meld
+[difftool]
+    prompt = false
+[difftool "meld"]
+    cmd = meld "$LOCAL" "$REMOTE"
+
+[merge]
+    tool = meld
+[mergetool "meld"]
+    # Choose one of these 2 lines (not both!)
+    cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
+    #cmd = meld "$LOCAL" "$BASE" "$REMOTE" --output "$MERGED"
+
+# [merge]
+# 	tool = p4merge
+# [mergetool "p4merge"]
+# 	path = p4merge.exe
+# [diff]
+# 	tool = p4merge
+# [difftool "p4merge"]
+# 	path = p4merge.exe
+
+# [merge]
+# 	tool = p4merge
+# 	guitool = p4merge
+
+# [mergetool "p4merge"]
+# 	path = p4merge.exe
+# 	cmd = \"\" \"$BASE\" \"$LOCAL\" \"$REMOTE\" \"$MERGED\"
+
+[core]
+	autocrlf = true
+	longpaths = true
+	excludesfile = ~/.gitignore_global
+	editor = 'C:/Program Files/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin
+
+	hooksPath = C:\\Users\\chhh\\pmi\\git\\hooks
+#	sshCommand = c:/windows/system32/openssh/ssh.exe
+[credential]
+	helper = manager
+[gui]
+	encoding = utf-8
+[filesystem "Azul Systems, Inc.|11.0.5|16735374"]
+	timestampResolution = 2002 microseconds
+	minRacyThreshold = 0 nanoseconds
+[filesystem "Azul Systems, Inc.|1.8.0_232|16735374"]
+	timestampResolution = 1001 microseconds
+	minRacyThreshold = 0 nanoseconds
