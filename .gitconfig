@@ -2,7 +2,7 @@
 [user]
 # Please adapt and uncomment the following lines:
 	name = Dmitry Avtonomov
-	email = dmt.avt@gmail.com
+	email = dmtavt@proteinmetrics.com
 [color]
     ui = true
     interactive = auto
@@ -11,19 +11,6 @@
     path = .gitaliases
     path = .gitmorealiases
 
-[core]
-	autocrlf = true
-	longpaths = true
-	excludesfile = ~/.gitignore_global
-	editor = 'C:/Program Files/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin
-
-[credential]
-	helper = manager
-
-[gui]
-	encoding = utf-8
-
-# old config for meld as diff/merge tool
 # [diff]
 # 	tool = meld
 # [difftool "meld"]
