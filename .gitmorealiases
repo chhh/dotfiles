@@ -1,5 +1,10 @@
 [alias]
 
+  hide = update-index --assume-unchanged
+  unhide = update-index --no-assume-unchanged
+  unhide-all = ! git ls-files -v | grep '^[a-z]' | cut -c3- | xargs git unhide --
+  hidden = ! git ls-files -v | grep '^[a-z]' | cut -c3-
+
   # template/stub for functional git aliases
   # my_alias = "!f() { 〈your complex command〉 }; f"
 
@@ -13,7 +18,8 @@
   # this is the same as 'savem' alias
   aacm = !git add -A && git commit -m 
 
-  fa = fetch --all
+  fa = fetch --all --prune
+  fp = fetch --prune
   up = !git pull --rebase --autostash --prune $@ && git submodule update --init --recursive
   
   # push everything including tags to default remote
