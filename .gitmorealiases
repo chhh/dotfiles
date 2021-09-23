@@ -1,5 +1,20 @@
 [alias]
 
+  mob3d = !gitk --date-order --glob=*MOB* --since=3.days
+  mob1w = !gitk --date-order --glob=*MOB* --since=1.week
+  mob1m = !gitk --date-order --glob=*MOB* --since=1.month
+  mob   = !gitk --date-order --glob=*MOB* --since=1.month
+  mob6m = !gitk --date-order --glob=*MOB* --since=6.months
+
+  view1d = !gitk --date-order --all --since=1.day
+  view3d = !gitk --date-order --all --since=3.days
+  view1w = !gitk --date-order --all --since=1.week
+  view1m = !gitk --date-order --all --since=1.month
+  view3m = !gitk --date-order --all --since=3.months
+
+  cot = checkout --track
+  menff = merge --no-ff
+
   hide = update-index --assume-unchanged
   unhide = update-index --no-assume-unchanged
   unhide-all = ! git ls-files -v | grep '^[a-z]' | cut -c3- | xargs git unhide --
