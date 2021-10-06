@@ -3,6 +3,7 @@
   # replace 'echo' with 'git push -d origin'
   pud = "!f() { \
     replaced=$(echo "$1" | awk '{gsub(/^remotes\\/[^\\/]*\\//, \"\")}{print}'); \
+    echo "executing: git push -d origin $replaced"; \
     git push -d origin "$replaced"; \
   }; f"
 
