@@ -1,18 +1,32 @@
 [alias]
 
+  # replace 'echo' with 'git push -d origin'
+  pud = "!f() { \
+    replaced=$(echo "$1" | awk '{gsub(/^remotes\\/[^\\/]*\\//, \"\")}{print}'); \
+    git push -d origin "$replaced"; \
+  }; f"
+
+  # alternative push -d origin using shell string substitution:
+  pud-alt = "!f() { git push -d origin \"${1#remotes/*/}\"; }; f"
+
   mob3d = !gitk --date-order --glob=*MOB* --since=3.days
   mob1w = !gitk --date-order --glob=*MOB* --since=1.week
   mob1m = !gitk --date-order --glob=*MOB* --since=1.month
   mob   = !gitk --date-order --glob=*MOB* --since=1.month
   mob6m = !gitk --date-order --glob=*MOB* --since=6.months
 
+  view = !gitk --date-order --all --since=1.week
+  viewA = !gitk --date-order --all
   view1d = !gitk --date-order --all --since=1.day
   view3d = !gitk --date-order --all --since=3.days
   view1w = !gitk --date-order --all --since=1.week
   view1m = !gitk --date-order --all --since=1.month
   view3m = !gitk --date-order --all --since=3.months
+  view6m = !gitk --date-order --all --since=6.months
 
-  cot = checkout --track
+  cot = !git checkout --track
+  puu = !git push -u origin
+  pufu = !git push -fu
   menff = merge --no-ff
 
   hide = update-index --assume-unchanged
