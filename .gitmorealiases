@@ -16,8 +16,9 @@
   mob   = !gitk --date-order --glob=*MOB* --since=1.month
   mob6m = !gitk --date-order --glob=*MOB* --since=6.months
 
+  view-cur = !gitk --since=1.week
   view = !gitk --date-order --all --since=1.week
-  viewA = !gitk --date-order --all
+  view-all = !gitk --date-order --all
   view1d = !gitk --date-order --all --since=1.day
   view3d = !gitk --date-order --all --since=3.days
   view1w = !gitk --date-order --all --since=1.week
@@ -26,7 +27,7 @@
   view6m = !gitk --date-order --all --since=6.months
 
   cot = !git checkout --track
-  puu = !git push -u origin
+  puo = !git push -u origin `git branch --show-current`
   pufu = !git push -fu
   menff = merge --no-ff
 
