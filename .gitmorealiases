@@ -9,6 +9,36 @@
 
   # alternative push -d origin using shell string substitution:
   pud-alt = "!f() { git push -d origin \"${1#remotes/*/}\"; }; f"
+  
+  cot = !git checkout --track
+  puo = !git push -u origin `git branch --show-current`
+  pufu = !git push -fu
+  menff = merge --no-ff
+
+  # detach HEAD
+  cod = checkout --detach
+  
+  # detach HEAD and delete the branch we were on
+  codd = "!f() { \
+    cur=$(git branch --show-current); \
+    echo "deleting branch: $cur"; \
+    git checkout --detach; \
+    git branch -d $cur; \
+  }; f"
+
+
+  # detach, delete given local branch, checkout fresh remote-tracking
+  rebranch = "!f() { \
+    BRANCH=${1}; \
+    git checkout --detach; \
+    git branch -d "$BRANCH"; \
+    git cot "origin/$BRANCH"; \
+  }; f"
+
+  remaster = rebranch master
+  rerelease = rebranch release/2021.09
+
+
 
   mob3d = !gitk --date-order --glob=*MOB* --since=3.days
   mob1w = !gitk --date-order --glob=*MOB* --since=1.week
@@ -25,11 +55,6 @@
   view1m = !gitk --date-order --all --since=1.month
   view3m = !gitk --date-order --all --since=3.months
   view6m = !gitk --date-order --all --since=6.months
-
-  cot = !git checkout --track
-  puo = !git push -u origin `git branch --show-current`
-  pufu = !git push -fu
-  menff = merge --no-ff
 
   hide = update-index --assume-unchanged
   unhide = update-index --no-assume-unchanged
