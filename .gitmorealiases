@@ -1,25 +1,25 @@
 [alias]
 
-  # replace 'echo' with 'git push -d origin'
-  pud = "!f() { \
+  # delete remote branch, allowing remotes/origin in the branch name 
+  delete-remote = "!f() { \
     replaced=$(echo "$1" | awk '{gsub(/^remotes\\/[^\\/]*\\//, \"\")}{print}'); \
     echo "executing: git push -d origin $replaced"; \
     git push -d origin "$replaced"; \
   }; f"
 
   # alternative push -d origin using shell string substitution:
-  pud-alt = "!f() { git push -d origin \"${1#remotes/*/}\"; }; f"
+  delete-remote-alt = "!f() { git push -d origin \"${1#remotes/*/}\"; }; f"
   
   cot = !git checkout --track
-  puo = !git push -u origin `git branch --show-current`
-  pufu = !git push -fu
+  push0 = !git push -u origin `git branch --show-current`
+  push-force = !git push -fu
   menff = merge --no-ff
 
   # detach HEAD
-  cod = checkout --detach
+  detach = checkout --detach
   
   # detach HEAD and delete the branch we were on
-  codd = "!f() { \
+  detach-delete = "!f() { \
     cur=$(git branch --show-current); \
     echo "deleting branch: $cur"; \
     git checkout --detach; \
