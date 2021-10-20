@@ -15,6 +15,14 @@
   push-force = !git push -fu
   menff = merge --no-ff
 
+  # merge remote branch into current, allowing remotes/ or origin/ prefix to be omitted
+  merge-remote = "!f() { \
+    replaced=$(echo "$1" | awk '{gsub(/^remotes\\/[^\\/]*\\//, \"\")}{print}'); \
+    replaced=$(echo "$replaced" | awk '{gsub(/^origin\\//, \"\")}{print}'); \
+    replaced="origin/$replaced"; \
+    echo "executing: merge $replaced"; \
+  }; f"
+
   # detach HEAD
   detach = checkout --detach
   
