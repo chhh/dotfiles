@@ -11,7 +11,7 @@
   delete-remote-alt = "!f() { git push -d origin \"${1#remotes/*/}\"; }; f"
   
   cot = !git checkout --track
-  push0 = !git push -u origin `git branch --show-current`
+  push-init = !git push -u origin `git branch --show-current`
   push-force = !git push -fu
   menff = merge --no-ff
 
