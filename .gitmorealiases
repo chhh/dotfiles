@@ -21,6 +21,7 @@
     replaced=$(echo "$replaced" | awk '{gsub(/^origin\\//, \"\")}{print}'); \
     replaced="origin/$replaced"; \
     echo "executing: merge $replaced"; \
+    git merge --no-ff "$replaced"; \
   }; f"
 
   # detach HEAD
