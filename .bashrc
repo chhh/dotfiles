@@ -1,5 +1,5 @@
 # Taken from: https://github.com/bobthecow/git-flow-completion/blob/master/git-flow-completion.bash
-source ~/git-flow-completion.bash
+#source ~/git-flow-completion.bash
 
 
 if [[ -n "${ConEmuPID}" ]]; then
@@ -14,7 +14,11 @@ fi
 # Saves typing the ssh key password every time you interact with
 # a remote repo.
 
-key_file=~/.ssh/dmtavt-home-desktop_rsa
+# Usage of USERPROFILE variable requires an extra Env Var to be set:
+#   WSLENV=USERPROFILE/up
+#
+#key_file=~/.ssh/dmtavt-home-desktop_rsa
+key_file=$USERPROFILE/.ssh/chhh-bertis-rsa
 env=~/.ssh/agent.env
 
 agent_load_env () { test -f "$env" && . "$env" >| /dev/null ; }
@@ -36,3 +40,4 @@ elif [ "$SSH_AUTH_SOCK" ] && [ $agent_run_state = 1 ]; then
 fi
 
 unset env
+
