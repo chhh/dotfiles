@@ -12,6 +12,7 @@
   
   cot = !git checkout --track
   push-init = !git push -u origin `git branch --show-current`
+  push-init-to = "!f() { git push -u $1 `git branch --show-current`; }; f"
   push-force = !git push -fu
   menff = merge --no-ff
 
@@ -137,6 +138,12 @@
       git branch -d $2; \
       git tag -d $2; \
   }; f"
+
+  f-nuke-on = "!f() { \
+      git push ${1} :$2; \
+      git branch -D $2; \
+      git tag -d $2; \
+  }; f"
   
   # Delete tags matching pattern both locally and remotely. $1 - remote, $2 - pattern
   # nuke-tags-on = "!f() { \
@@ -165,3 +172,11 @@
   
   # shows branches that are not present on remote named origin
   list-local = !git branch -r | awk '{print $1}' | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk '{print $1}'
+
+
+  # show name of current branch (without refs/heads/ prefix)
+  # git rev-parse --abbrev-ref HEAD
+  cur-bname = branch --show-current
+
+  # show full current ref name (like refs/heads/master)
+  cur-rname = symbolic-ref HEAD
