@@ -28,3 +28,26 @@ oh-my-posh init pwsh | Invoke-Expression
 #Import-Module oh-my-posh
 #Set-PoshPrompt -Theme ~\dotfiles\theme-ohmy-powershell.json
 
+
+# msconvert
+function Convert-ToMzml
+{
+    param(
+        # [Parameter(Mandatory=$true)][string]$RawGlob,
+        [string]$RawGlob,
+        [string]$OutDir,
+        [switch]$NoCentroid,
+        [switch]$Mz64,
+        [switch]$Dryrun
+    )
+    if ($RawGlob -eq '') { $RawGlob = '*.raw' }
+    if ($OutDir -eq '') { $OutDir = '.' }
+    $filter = " --filter `"peakPicking vendor`""
+    $mzBits = '--mz32'
+    if ($Mz64) { $mzBits = '--mz64' }
+    if ($NoCentroid) { $filter = '' }
+    $cmd = "msconvert --outdir `"$OutDir`" --mzML --simAsSpectra $mzBits --inten32 -z$filter $RawGlob"
+    if ($Dryrun) { Write-Output $cmd }
+    else { Invoke-Expression $cmd }
+}
+
