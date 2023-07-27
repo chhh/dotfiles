@@ -2,9 +2,10 @@
 
   # delete remote branch, allowing remotes/origin in the branch name 
   delete-remote = "!f() { \
+    remote=$(echo "$1" | awk 'match($0,/^remotes\\/(\\w+)?\\//, a) {print a[1]}'); \
     replaced=$(echo "$1" | awk '{gsub(/^remotes\\/[^\\/]*\\//, \"\")}{print}'); \
-    echo "executing: git push -d origin $replaced"; \
-    git push -d origin "$replaced"; \
+    echo "executing: git push -d "$remote" $replaced"; \
+    git push -d "$remote" "$replaced"; \
   }; f"
 
   # alternative push -d origin using shell string substitution:
