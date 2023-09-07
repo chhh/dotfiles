@@ -67,9 +67,4 @@
 	helper = manager
 [gui]
 	encoding = utf-8
-[filesystem "Azul Systems, Inc.|11.0.5|16735374"]
-	timestampResolution = 2002 microseconds
-	minRacyThreshold = 0 nanoseconds
-[filesystem "Azul Systems, Inc.|1.8.0_232|16735374"]
-	timestampResolution = 1001 microseconds
-	minRacyThreshold = 0 nanoseconds
+
