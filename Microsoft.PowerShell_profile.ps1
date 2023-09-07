@@ -22,7 +22,7 @@ Set-PSReadlineOption -BellStyle None
 
 
 # Oh my posh
-oh-my-posh init pwsh | Invoke-Expression
+# oh-my-posh init pwsh | Invoke-Expression
 # Set the theme for oh-my-posh
 # Requires: Install-Module oh-my-posh -Scope AllUsers
 #Import-Module oh-my-posh

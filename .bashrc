@@ -18,7 +18,7 @@ fi
 #   WSLENV=USERPROFILE/up
 #
 #key_file=~/.ssh/dmtavt-home-desktop_rsa
-key_file=$USERPROFILE/.ssh/chhh-bertis-rsa
+key_file=$USERPROFILE/.ssh/id_rsa
 env=~/.ssh/agent.env
 
 agent_load_env () { test -f "$env" && . "$env" >| /dev/null ; }
