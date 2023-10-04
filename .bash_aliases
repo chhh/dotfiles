@@ -1,3 +1,7 @@
+alias cdbbfc="cd ~/source/bb-flight-control/"
+alias cdbmsio="cd ~/source/bertis-msio/"
+
+
 alias ll="ls -la --color=auto"
 alias la="ls -lA --color=auto"
 
@@ -67,6 +71,10 @@ case $ans in
         printf "\nNot running, exiting.\n"
         ;;
 esac
+}
+
+gkad() {
+    gitk --all --date-order
 }
 
 gka() {
