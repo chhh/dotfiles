@@ -45,8 +45,13 @@ function Convert-ToMzml
     $filter = " --filter `"peakPicking vendor`""
     $mzBits = '--mz32'
     if ($Mz64) { $mzBits = '--mz64' }
-    if ($NoCentroid) { $filter = '' }
-    $cmd = "msconvert --outdir `"$OutDir`" --mzML --simAsSpectra $mzBits --inten32 -z$filter $RawGlob"
+    if ($NoCentroid) {
+        $filter = ''
+	$ext = '.as-is.mzML'
+    } else {
+        $ext = '.centroid.mzML'
+    }
+    $cmd = "msconvert --ext $ext --outdir `"$OutDir`" --mzML --simAsSpectra $mzBits --inten32 -z$filter $RawGlob"
     Write-Output $cmd 
     if ($Dryrun) { return }
 
