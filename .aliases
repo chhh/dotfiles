@@ -2,6 +2,7 @@ alias cdbbfc="cd ~/source/bb-flight-control/"
 alias cdbmsio="cd ~/source/bertis-msio/"
 
 alias lac="ls -lAh --color=always"
+alias lacr="ls -lAh --color=always | less -r"
 
 #alias ll="ls -la --color=auto"
 #alias la="ls -lA --color=auto"
