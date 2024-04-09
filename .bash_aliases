@@ -19,7 +19,7 @@ nas-create-repo() {
         return 1
     fi
 
-    SCRIPT="cd /volume1/git; mkdir ${REPO}; cd ${REPO}; git init --bare;"
+    SCRIPT="cd /volume1/git; mkdir -p ${REPO}; cd ${REPO}; git init --bare;"
     for HOSTNAME in ${HOSTS} ; do
         ssh -l ${USERNAME} -p ${PORT} ${HOSTNAME} "${SCRIPT}"
     done
