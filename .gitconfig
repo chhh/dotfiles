@@ -2,7 +2,7 @@
 [user]
 # Please adapt and uncomment the following lines:
 	name = Dmitry Avtonomov
-	email = dmitry.avtonomov@bertis.com
+	email = dmt.avt@gmail.com
 [color]
     ui = true
     interactive = auto
@@ -61,10 +61,19 @@
 	excludesfile = ~/.gitignore_global
 	editor = 'C:/Program Files/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin
 
-	hooksPath = C:\\Users\\chhh\\pmi\\git\\hooks
+#	hooksPath = C:\\Users\\chhh\\pmi\\git\\hooks
+	sshCommand = 'C:\\Program Files\\Git\\usr\\bin\\ssh.exe'
 #	sshCommand = c:/windows/system32/openssh/ssh.exe
-[credential]
-	helper = manager
+
 [gui]
 	encoding = utf-8
 
+[credential]
+### Run `git help -a | grep credential-` in shell to see what helpers are available
+	helper = manager
+
+[credential "https://github.com"]
+	username = chhh
+
+[credential "https://gitlab.com"]
+	username = chhh
