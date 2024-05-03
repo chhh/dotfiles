@@ -1,0 +1,317 @@
+{
+    "apps": [
+        {
+            "Updated": "2023-09-06T15:51:08.6511019-07:00",
+            "Source": "main",
+            "Name": "7zip",
+            "Version": "23.01",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-22T11:10:52.0183217-07:00",
+            "Source": "main",
+            "Name": "busybox",
+            "Version": "5301-gda71f7c57",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-22T11:10:47.5769443-07:00",
+            "Source": "main",
+            "Name": "clink",
+            "Version": "1.6.12",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-06T17:07:51.9069561-07:00",
+            "Source": "main",
+            "Name": "dark",
+            "Version": "3.11.2",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-07T16:26:18.8629158-07:00",
+            "Source": "extras",
+            "Name": "everything",
+            "Version": "1.4.1.1024",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-10-12T10:35:31.7778717-07:00",
+            "Source": "extras",
+            "Name": "filezilla",
+            "Version": "3.65.0",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-06T17:42:09.9967444-07:00",
+            "Source": "extras",
+            "Name": "flameshot",
+            "Version": "12.1.0",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-25T14:09:13.5248392-07:00",
+            "Source": "main",
+            "Name": "gh",
+            "Version": "2.48.0",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-12T18:50:07.6347288-07:00",
+            "Source": "extras",
+            "Name": "gimp",
+            "Version": "2.10.34-2",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-11-07T10:30:37.5823927-08:00",
+            "Source": "main",
+            "Name": "gitignore",
+            "Version": "0.2018.07.25",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-11-27T10:45:41.6440365-08:00",
+            "Source": "extras",
+            "Name": "glogg",
+            "Version": "1.1.4",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-06T18:01:32.4726109-07:00",
+            "Source": "main",
+            "Name": "go",
+            "Version": "1.21.1",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-06T17:10:08.5885558-07:00",
+            "Source": "main",
+            "Name": "gradle",
+            "Version": "8.3",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-01-24T12:07:42.4204086-08:00",
+            "Source": "extras",
+            "Name": "grepwin",
+            "Version": "2.0.15",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-06T18:19:47.578066-07:00",
+            "Source": "main",
+            "Name": "hub",
+            "Version": "2.14.2",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-02-09T15:38:58.4959757-08:00",
+            "Source": "extras",
+            "Name": "imhex",
+            "Version": "1.32.2",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-10T14:28:36.4016157-07:00",
+            "Source": "extras",
+            "Name": "inkscape",
+            "Version": "1.3_2023-07-21_0e150ed6c4",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-08T10:00:47.7832066-07:00",
+            "Source": "main",
+            "Name": "innounp",
+            "Version": "0.50",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-03T09:53:49.8102559-07:00",
+            "Source": "extras",
+            "Name": "keepass",
+            "Version": "2.56",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-05-01T13:28:16.5632842-07:00",
+            "Source": "extras",
+            "Name": "logseq",
+            "Version": "0.10.9",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-06T17:10:17.5651944-07:00",
+            "Source": "main",
+            "Name": "maven",
+            "Version": "3.9.4",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-06T17:35:06.0527761-07:00",
+            "Source": "extras",
+            "Name": "meld",
+            "Version": "3.22.0",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-02T10:13:52.6769093-07:00",
+            "Source": "main",
+            "Name": "neovim",
+            "Version": "0.9.5",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-03T09:53:47.9560482-07:00",
+            "Source": "main",
+            "Name": "nuget",
+            "Version": "6.9.1",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-03T09:55:02.6729505-07:00",
+            "Source": "extras",
+            "Name": "obsidian",
+            "Version": "1.5.12",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-03-26T10:24:27.879614-07:00",
+            "Source": "main",
+            "Name": "pdftk",
+            "Version": "2.02",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-22T11:10:34.016784-07:00",
+            "Source": "main",
+            "Name": "pwsh",
+            "Version": "7.4.2",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-02-12T12:15:37.4281043-08:00",
+            "Source": "versions",
+            "Name": "python310",
+            "Version": "3.10.11",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-08T10:01:08.4557657-07:00",
+            "Source": "main",
+            "Name": "r",
+            "Version": "4.3.1",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-07T14:37:14.0837039-07:00",
+            "Source": "extras",
+            "Name": "rapidee",
+            "Version": "9.2.937",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-01-11T12:22:39.6833426-08:00",
+            "Source": "main",
+            "Name": "ripgrep",
+            "Version": "14.1.0",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-08T10:08:04.5174314-07:00",
+            "Source": "extras",
+            "Name": "rstudio",
+            "Version": "2023.06.2-561",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-10T13:09:11.1493719-07:00",
+            "Source": "extras",
+            "Name": "sumatrapdf",
+            "Version": "3.4.6",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-22T11:10:04.882306-07:00",
+            "Source": "extras",
+            "Name": "sysinternals",
+            "Version": "2024.2.13",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-03T09:50:54.4638222-07:00",
+            "Source": "extras",
+            "Name": "tabby",
+            "Version": "1.0.207",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-09-06T16:31:48.3687888-07:00",
+            "Source": "java",
+            "Name": "temurin11-jdk",
+            "Version": "11.0.20-101",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-01-29T13:31:31.510931-08:00",
+            "Source": "extras",
+            "Name": "vscode",
+            "Version": "1.85.2",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-05-01T17:02:07.6968704-07:00",
+            "Source": "extras",
+            "Name": "windirstat",
+            "Version": "1.1.2",
+            "Info": ""
+        },
+        {
+            "Updated": "2023-11-08T15:42:09.8303987-08:00",
+            "Source": "extras",
+            "Name": "yed",
+            "Version": "3.23.2",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-22T11:09:50.6432211-07:00",
+            "Source": "extras",
+            "Name": "zoom",
+            "Version": "6.0.3.37634",
+            "Info": ""
+        },
+        {
+            "Updated": "2024-04-03T09:54:19.9399445-07:00",
+            "Source": "extras",
+            "Name": "zotero",
+            "Version": "6.0.36",
+            "Info": ""
+        }
+    ],
+    "buckets": [
+        {
+            "Name": "main",
+            "Source": "https://github.com/ScoopInstaller/Main",
+            "Updated": "2024-05-01T14:10:34-07:00",
+            "Manifests": 1321
+        },
+        {
+            "Name": "extras",
+            "Source": "https://github.com/ScoopInstaller/Extras",
+            "Updated": "2024-05-01T15:43:28-07:00",
+            "Manifests": 2015
+        },
+        {
+            "Name": "versions",
+            "Source": "https://github.com/ScoopInstaller/Versions",
+            "Updated": "2024-05-01T13:30:45-07:00",
+            "Manifests": 453
+        },
+        {
+            "Name": "java",
+            "Source": "https://github.com/ScoopInstaller/Java",
+            "Updated": "2024-04-23T09:17:58-07:00",
+            "Manifests": 273
+        }
+    ]
+}
