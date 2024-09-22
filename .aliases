@@ -1,5 +1,5 @@
-alias cdbbfc="cd ~/source/bb-flight-control/"
-alias cdbmsio="cd ~/source/bertis-msio/"
+alias cdfc="cd /c/dmt.avt/source/bb-flight-control/"
+alias cdmsio="cd /c/dmt.avt/source/bertis-msio/"
 
 alias lac="ls -lAh --color=always"
 alias lacr="ls -lAh --color=always | less -r"
@@ -121,4 +121,21 @@ git_leafs_origin() {
                 done
         } < <(git branch -v --no-abbrev | sed 's/\*//' )
         echo "** end of list"
+}
+
+git7zbr() {
+	echo "** git 7z a specific branch **"
+	
+	if [ $# -eq 0 ]; then
+		echo "No arguments. Need 1 arg - branch name"
+		return
+	fi
+
+	REPO_NAME=$(basename $(pwd)) && \
+	ZIP_NAME=$REPO_NAME.7z && \
+	git clone -b $1 . temp_repo && \
+	7z a -r $ZIP_NAME ./temp_repo && \
+	7z rn $ZIP_NAME temp_repo $REPO_NAME && \
+	rm -rf temp_repo && \
+	mv $ZIP_NAME ..
 }

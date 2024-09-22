@@ -1,2 +1,11 @@
 alias ll="ls -la --color=auto"
 alias la="ls -lA --color=auto"
+alias git7z='(
+REPO_NAME=$(basename $(pwd))
+ZIP_NAME=$REPO_NAME.7z
+git clone -b master . temp_repo
+7z a -r $ZIP_NAME ./temp_repo
+7z rn $ZIP_NAME temp_repo $REPO_NAME
+rm -rf temp_repo
+mv $ZIP_NAME ..
+)'
