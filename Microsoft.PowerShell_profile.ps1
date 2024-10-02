@@ -1,4 +1,4 @@
-# Set tab completion to work like in Bash (complete up to longest common sequence)
+﻿# Set tab completion to work like in Bash (complete up to longest common sequence)
 Set-PSReadlineKeyHandler -Key Tab -Function Complete
 
 
