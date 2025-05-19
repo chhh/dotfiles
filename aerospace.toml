@@ -187,3 +187,7 @@ run = 'layout floating'
 [[on-window-detected]]
 if.app-name-regex-substring = 'telegram'
 run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'wish' # git gui
+run = 'layout floating'
