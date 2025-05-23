@@ -48,6 +48,20 @@ automatically-unhide-macos-hidden-apps = false
 [key-mapping]
     preset = 'qwerty'
 
+[workspace-to-monitor-force-assignment]
+    1 = ['secondary', 'dell']
+    2 = ['secondary', 'dell']
+    3 = ['secondary', 'dell']
+    Q = ['secondary', 'dell']
+    W = ['secondary', 'dell']
+    E = ['secondary', 'dell']
+    A = ['secondary', 'dell']
+    S = ['secondary', 'dell']
+    D = ['secondary', 'dell']
+    Z = ['main', 'built-in']
+    X = ['secondary', 'dell']
+    C = ['main', 'built-in']
+
 # Gaps between windows (inner-*) and between monitor edges (outer-*).
 # Possible values:
 # - Constant:     gaps.outer.top = 8
@@ -185,9 +199,25 @@ if.app-name-regex-substring = 'finder'
 run = 'layout floating'
 
 [[on-window-detected]]
+if.app-name-regex-substring = 'preview'
+run = 'layout floating'
+
+[[on-window-detected]]
 if.app-name-regex-substring = 'telegram'
 run = 'layout floating'
 
 [[on-window-detected]]
 if.app-name-regex-substring = 'wish' # git gui
 run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'slack'
+run = 'move-node-to-workspace C'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'zoom'
+run = 'move-node-to-workspace Z'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'logseq'
+run = 'move-node-to-workspace Q'
