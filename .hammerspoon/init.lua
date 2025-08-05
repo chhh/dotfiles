@@ -147,7 +147,10 @@ hs.hotkey.bind({"cmd", "ctrl"}, "s", function()
 end)
 
 hs.hotkey.bind({"cmd", "ctrl"}, "z", function()
-    focusOrLaunchApp("Zoom", true)
+    focusOrLaunchFromList({
+        "zoom.us",
+        "Zoom"
+    }, false, "zoom.us")
 end)
 
 -- Focus PyCharm with CMD+CTRL+P (try multiple possible names)
