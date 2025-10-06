@@ -67,26 +67,6 @@ end
 
 
 
--- Generic function to focus or launch an application
--- @param appName: string - The name of the application
--- @param shouldLaunch: boolean - Whether to launch the app if it's not running
-local function focusOrLaunchApp(appName, shouldLaunch)
-    local app = hs.application.get(appName)
-    
-    if app then
-        -- App is running, unhide and activate it
-        if app:isHidden() then
-            app:unhide()
-        end
-        app:activate()
-    elseif shouldLaunch then
-        -- App is not running, try to launch it
-        hs.application.launchOrFocus(appName)
-    else
-        -- App is not running and we're not supposed to launch it
-        hs.alert.show(appName .. " is not running")
-    end
-end
 
 -- Function to focus the first running app from a list of possible names
 -- @param appNames: table - Array of possible application names to try
@@ -128,6 +108,11 @@ end
 -- Focus iTerm2 with CMD+CTRL+I
 hs.hotkey.bind({"cmd", "ctrl"}, "i", function()
     focusOrLaunchApp("iTerm2", true)
+end)
+
+-- Focus kitty with CMD+CTRL+K
+hs.hotkey.bind({"cmd", "ctrl"}, "k", function()
+    focusOrLaunchApp("kitty", true)
 end)
 
 hs.hotkey.bind({"cmd", "ctrl"}, "c", function()
