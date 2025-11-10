@@ -1,9 +1,8 @@
 {
     "window.commandCenter": 1,
-    "workbench.colorTheme": "JetBrains Darcula Theme",
     // Enable testing using pytest.
     "python.testing.pytestEnabled": true,
-    "git.autofetch": true,
+    "git.autofetch": "all",
     "git.confirmSync": false,
     "jupyter.widgetScriptSources": [
         "jsdelivr.com",
@@ -19,6 +18,10 @@
         "editor.findMatchBackground": "#e100ffc3",
         "editor.lineHighlightBackground": "#a612b624",
         "tree.indentGuidesStroke": "#2fff00",
+        "[Tokyo Hack]": {
+            "notebook.editorBackground": "#16031c",
+            "notebook.cellEditorBackground": "#221205"
+        },
     },
 
     "workbench.tree.indent": 20,
@@ -30,5 +33,46 @@
     "diffEditor.ignoreTrimWhitespace": true,
     "diffEditor.maxComputationTime": 0,
     "git.enableSmartCommit": true,
-    "diffEditor.hideUnchangedRegions.enabled": true
+    "git.allowNoVerifyCommit": true,
+    "git.allowForcePush": true,
+    "editor.minimap.enabled": true,
+    "workbench.iconTheme": "material-icon-theme",
+    "notebook.cellToolbarVisibility": "hover",
+    "notebook.dragAndDropEnabled": false,
+    "git.openRepositoryInParentFolders": "never",
+    "[python]": {
+        "diffEditor.ignoreTrimWhitespace": false
+    },
+    "diffEditor.hideUnchangedRegions.enabled": true,
+
+    "compareFolders.showIdentical": false,
+    "workbench.colorTheme": "Tokyo Hack",
+    "nebulaOni.update.restoreConfiguration": {
+        "themeSettings": {
+            "background": "Grey",
+            "main": "Bumblebee",
+            "highlight": "Ultra Violet",
+            "focusBorder": "ON",
+            "fontStyle": "Italic",
+            "syntaxBrightness": "Normal",
+            "comments": "Dark Violet",
+            "favorite": "OFF"
+        },
+        "favoriteSettings": {
+            "background": "Glacial Blue",
+            "main": "Sakura",
+            "highlight": "Ultra Violet",
+            "focusBorder": "ON",
+            "fontStyle": "Italic",
+            "syntaxBrightness": "Dimmed",
+            "comments": "Dark Magenta",
+            "favorite": "Nebula Oni (Pegasus)"
+        }
+    },
+    "extensions.experimental.affinity": {
+        "asvetliakov.vscode-neovim": 1
+    },
+    "editor.lineNumbers": "relative",
+    "editor.renderFinalNewline": "on", // optional, just good hygiene
+
 }
