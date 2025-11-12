@@ -4,6 +4,9 @@
     "python.testing.pytestEnabled": true,
     "git.autofetch": "all",
     "git.confirmSync": false,
+    
+    
+    
     "jupyter.widgetScriptSources": [
         "jsdelivr.com",
         "unpkg.com"
@@ -11,6 +14,7 @@
     "terminal.integrated.defaultProfile.osx": "zsh",
     "editor.multiCursorModifier": "ctrlCmd",
    
+    
     "workbench.colorCustomizations": {
         "editor.selectionBackground": "#d309bbc5",
         "editor.selectionHighlightBackground": "#d309bbc5", // highlight words same as selection
@@ -20,12 +24,13 @@
         "tree.indentGuidesStroke": "#2fff00",
         "[Tokyo Hack]": {
             "notebook.editorBackground": "#16031c",
-            "notebook.cellEditorBackground": "#221205"
+            "notebook.cellEditorBackground": "#221205",
+            "terminal.selectionBackground": "#2E8B57",
+            "terminal.selectionForeground": "#ffffff",
         },
     },
 
     "workbench.tree.indent": 20,
-    
 
 
     "notebook.lineNumbers": "on",
