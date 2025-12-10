@@ -4,6 +4,7 @@
     "python.testing.pytestEnabled": true,
     "git.autofetch": "all",
     "git.confirmSync": false,
+    "git.showCursorWorktrees": true,
     
     
     
@@ -27,6 +28,9 @@
             "notebook.cellEditorBackground": "#221205",
             "terminal.selectionBackground": "#2E8B57",
             "terminal.selectionForeground": "#ffffff",
+            "scrollbarSlider.background": "#a618d580",       // Normal state (Red with 50% opacity)
+            "scrollbarSlider.hoverBackground": "#a618d580",    // Hover state (Solid Red)
+            "scrollbarSlider.activeBackground": "#d5189680",    // Clicked/Active state (Green)
         },
     },
 
@@ -78,6 +82,7 @@
         "asvetliakov.vscode-neovim": 1
     },
     "editor.lineNumbers": "relative",
-    "editor.renderFinalNewline": "on", // optional, just good hygiene
+    "editor.renderFinalNewline": "on",
+    "cursor.composer.queueMessageDefaultBehavior": "stop-and-send", // optional, just good hygiene
 
 }
