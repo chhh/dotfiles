@@ -1,5 +1,8 @@
 [alias]
 
+  # Print short git hash of the last commit
+  lasthash = rev-parse --short HEAD
+
   # delete remote branch, allowing remotes/origin in the branch name 
   delete-remote = "!f() { \
     remote=$(echo "$1" | awk 'match($0,/^remotes\\/(\\w+)?\\//, a) {print a[1]}'); \
