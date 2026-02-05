@@ -22,3 +22,17 @@ vim.api.nvim_create_user_command("W", function()
   vim.cmd("write")
 end, { bar = true})
 
+-- Note: vim.keymap.set() is non-recursive by default (equivalent to :noremap),
+-- so we don't need to pass { noremap = true }.
+
+-- Crazy up/down replaced with centered up/down
+vim.keymap.set("n", "<C-d>", "<C-d>zz")
+vim.keymap.set("n", "<C-u>", "<C-u>zz")
+
+-- Center view upon moving the search
+vim.keymap.set("n", "n", "nzzzv")
+vim.keymap.set("n", "N", "Nzzzv")
+
+-- Select the last pasted text
+vim.keymap.set("n", "gp", "`[v`]")
+
