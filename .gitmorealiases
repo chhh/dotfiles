@@ -3,6 +3,14 @@
   # Print short git hash of the last commit
   lasthash = rev-parse --short HEAD
 
+  # Move main here
+  mmh = fetch . HEAD:main
+
+  # Move main here + push to origin
+  mmhp = "!f() { \
+    git fetch . HEAD:main && git push origin main; \
+  }; f"
+
   # delete remote branch, allowing remotes/origin in the branch name 
   delete-remote = "!f() { \
     remote=$(echo "$1" | awk 'match($0,/^remotes\\/(\\w+)?\\//, a) {print a[1]}'); \
@@ -123,18 +131,12 @@
 
   amend = commit -a --amend
 
-  # commit, amend all
+  # commit, amend all - basically squash all current changes into the previous commit
   caa = commit -a --amend -C HEAD
 
   # a proper reset, that doesn't immediately make you loose everything
   # you can still retrieve the changes from reflog
   wipe = !git add -A && git commit -qm 'WIPE SAVEPOINT' && git reset HEAD~1 --hard
-
-  # delete all local branches that have been merged into master (or the 
-  # branch that you specify as the argument to this alias)
-  # ${1-master} in shell script means: $1 (the 1st arguemnt) or default to 'master' if $1 not set
-  bclean = "!f() { git checkout ${1-master} && git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs git branch -d; }; f"
-  bdone = "!f() { git checkout ${1-master} && git up && git bclean ${1-master}; }; f"
 
   # Delete a branch/tag both locally and remotely
   nuke-on = "!f() { \
@@ -148,6 +150,14 @@
       git branch -D $2; \
       git tag -d $2; \
   }; f"
+  
+  # delete all local branches that have been merged into master (or the 
+  # branch that you specify as the argument to this alias)
+  # ${1-master} in shell script means: $1 (the 1st arguemnt) or default to 'master' if $1 not set
+  bclean = "!f() { git checkout ${1-master} && git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs git branch -d; }; f"
+  bdone = "!f() { git checkout ${1-master} && git up && git bclean ${1-master}; }; f"
+  bcleanest-dry = "!f() { git checkout ${1-master} && git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs -I{} echo "git nuke {}"; }; f"
+  bcleanest = "!f() { git checkout ${1-master} && git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs -I{} git nuke {}; }; f"
   
   # Delete tags matching pattern both locally and remotely. $1 - remote, $2 - pattern
   # nuke-tags-on = "!f() { \
