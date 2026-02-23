@@ -1,5 +1,9 @@
 [alias]
 
+  # Worktree stuff
+  wt = worktree
+  wtl = wt list
+
   # Print short git hash of the last commit
   lasthash = rev-parse --short HEAD
 

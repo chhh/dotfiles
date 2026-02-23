@@ -1,13 +1,55 @@
-alias cdfc="cd /c/dmt.avt/source/bb-flight-control/"
-alias cdmsio="cd /c/dmt.avt/source/bertis-msio/"
+#alias cdfc="cd /c/dmt.avt/source/bb-flight-control/"
+#alias cdmsio="cd /c/dmt.avt/source/bertis-msio/"
+
+alias enveda-verify-commit="poetry run pre-commit run --all-files"
 
 alias lac="ls -lAh --color=always"
 alias lacr="ls -lAh --color=always | less -r"
+alias ls="eza"
+alias ll="eza -ll --color=always"
+alias l="eza -ll --color=always | less -R"
 
 #alias ll="ls -la --color=auto"
 #alias la="ls -lA --color=auto"
 
 alias wd='echo ${PWD##*/}'
+
+# Create a git worktree from a remote or local branch.
+# Supports branch names copied from gitk.
+wt() {
+  if [ -z "$1" ]; then
+    echo "Usage: wt <branch-name | remotes/<remote>/<branch>>"
+    return 1
+  fi
+
+  local input="$1"
+  local remote="origin"
+  local branch=""
+  local ref=""
+  local dir=""
+
+  # If input starts with "remotes/", parse remote + branch:
+  # regex: remotes\/(.+?)\/(.+)
+  if [[ "$input" == remotes/* ]]; then
+    remote="$(printf '%s' "$input" | sed -E 's#^remotes/([^/]+)/(.+)$#\1#')"
+    branch="$(printf '%s' "$input" | sed -E 's#^remotes/([^/]+)/(.+)$#\2#')"
+  else
+    branch="$input"
+  fi
+
+  dir="../$branch"
+  ref="$remote/$branch"
+
+  # Fetch chosen remote (origin by default)
+  git fetch "$remote" || return $?
+
+  # If local branch exists, use it; otherwise, use remote ref (will create local branch)
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    git worktree add "$dir" "$branch"
+  else
+    git worktree add "$dir" "$ref"
+  fi
+}
 
 nas-create-repo() {
     USERNAME=dima
