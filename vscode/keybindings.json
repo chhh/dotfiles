@@ -1,0 +1,125 @@
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "ctrl+alt+o",
+        "command": "outline.focus"
+    },
+    // Collapse ALL in Outline
+    {
+        "key": "ctrl+alt+-",
+        "command": "outline.collapse"
+    },
+
+    {
+        "key": "ctrl+alt+=",
+        "command": "outline.expand"
+    },
+    // Expand one level (on the selected symbol)
+    {
+        "key": "ctrl+alt+]",
+        "command": "list.expand",
+        "when": "outlineFocus"
+    },
+
+    // Collapse one level (on the selected symbol)
+    {
+        "key": "ctrl+alt+[",
+        "command": "list.collapse",
+        "when": "outlineFocus"
+    },
+    {
+        "key": "cmd+i",
+        "command": "composerMode.agent"
+    },
+    {
+        "key": "ctrl+shift+a",
+        "command": "-cursorLineStartSelect",
+        "when": "textInputFocus"
+    },
+    {
+        "key": "ctrl+alt+,",
+        "command": "workbench.action.toggleSidebarVisibility"
+    },
+    {
+        "key": "ctrl+alt+.",
+        "command": "workbench.action.toggleAuxiliaryBar"
+    },
+    {
+        "key": "ctrl+alt+g",
+        "command": "workbench.scm.focus"
+    },
+    {
+        "key": "ctrl+alt+f",
+        "command": "workbench.view.search.focus"
+    },
+    {
+        "key": "ctrl+alt+e",
+        "command": "workbench.action.focusActiveEditorGroup",
+        "when": "explorerViewletVisible && filesExplorerFocus"
+    },
+    {
+        "key": "ctrl+alt+e",
+        "command": "workbench.files.action.focusFilesExplorer",
+        "when": "!explorerViewletVisible || !filesExplorerFocus"
+    },
+    // Notebook Jupyter commands
+    {
+        "key": "ctrl+shift+a",
+        "command": "notebook.cell.insertCodeCellAbove",
+        "when": "notebookCellListFocused && !inputFocus"
+    },
+    {
+        "key": "shift+cmd+enter",
+        "command": "-notebook.cell.insertCodeCellAbove",
+        "when": "notebookCellListFocused && !inputFocus"
+    },
+    {
+        "key": "ctrl+shift+z",
+        "command": "notebook.cell.insertCodeCellBelow",
+        "when": "notebookCellListFocused && !inputFocus && notebookChatOuterFocusPosition == ''"
+    },
+    {
+        "key": "cmd+enter",
+        "command": "-notebook.cell.insertCodeCellBelow",
+        "when": "notebookCellListFocused && !inputFocus && notebookChatOuterFocusPosition == ''"
+    },
+    {
+        "key": "ctrl+shift+backspace",
+        "command": "notebook.cell.delete",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused"
+    },
+    {
+        "key": "cmd+backspace",
+        "command": "-notebook.cell.delete",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused"
+    },
+    {
+        "key": "ctrl+shift+enter",
+        "command": "-jupyter.runAndDebugCell",
+        "when": "isWorkspaceTrusted && jupyter.ispythonnotebook && !notebookKernel && notebookCellType == 'code' || isWorkspaceTrusted && jupyter.ispythonnotebook && notebookCellType == 'code' && notebookKernel =~ /^ms-toolsai.jupyter\\// && resource not in 'jupyter.notebookeditor.debugDocuments'"
+    },
+    {
+        "key": "ctrl+shift+enter",
+        "command": "jupyter.runcurrentcelladvance",
+        "when": "editorTextFocus && isWorkspaceTrusted && jupyter.hascodecells && !editorHasSelection && !isCompositeNotebook && !notebookEditorFocused"
+    },
+    {
+        "key": "shift+enter",
+        "command": "-jupyter.runcurrentcelladvance",
+        "when": "editorTextFocus && isWorkspaceTrusted && jupyter.hascodecells && !editorHasSelection && !isCompositeNotebook && !notebookEditorFocused"
+    },
+    {
+        "key": "shift+alt+[",
+        "command": "workbench.action.navigateToLastEditLocation"
+    },
+    {
+        "key": "ctrl+shift+d",
+        "command": "workbench.action.debug.run",
+        "when": "!inDebugMode && !terminalFocus"
+    },
+    {
+        "key": "ctrl+d",
+        "command": "-workbench.action.debug.run",
+        "when": "!inDebugMode && !terminalFocus"
+    },
+]

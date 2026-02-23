@@ -1,0 +1,89 @@
+{
+    "window.commandCenter": 1,
+    // Enable testing using pytest.
+    "python.testing.pytestEnabled": true,
+    "git.autofetch": "all",
+    "git.confirmSync": false,
+    "git.showCursorWorktrees": true,
+    
+    
+    
+    "jupyter.widgetScriptSources": [
+        "jsdelivr.com",
+        "unpkg.com"
+    ],
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "editor.multiCursorModifier": "ctrlCmd",
+   
+    
+    "workbench.colorCustomizations": {
+        "editor.selectionBackground": "#d309bbc5",
+        "editor.selectionHighlightBackground": "#d309bbc5", // highlight words same as selection
+        "editor.findMatchHighlightBackground" :"#d91c4e72",
+        "editor.findMatchBackground": "#e100ffc3",
+        "editor.lineHighlightBackground": "#a612b624",
+        "tree.indentGuidesStroke": "#2fff00",
+        "[Tokyo Hack]": {
+            "notebook.editorBackground": "#16031c",
+            "notebook.cellEditorBackground": "#221205",
+            "terminal.selectionBackground": "#2E8B57",
+            "terminal.selectionForeground": "#ffffff",
+            "scrollbarSlider.background": "#a618d580",       // Normal state (Red with 50% opacity)
+            "scrollbarSlider.hoverBackground": "#a618d580",    // Hover state (Solid Red)
+            "scrollbarSlider.activeBackground": "#d5189680",    // Clicked/Active state (Green)
+        },
+    },
+
+    "workbench.tree.indent": 20,
+
+
+    "notebook.lineNumbers": "on",
+    "python.terminal.activateEnvironment": false,
+    "diffEditor.ignoreTrimWhitespace": true,
+    "diffEditor.maxComputationTime": 0,
+    "git.enableSmartCommit": true,
+    "git.allowNoVerifyCommit": true,
+    "git.allowForcePush": true,
+    "editor.minimap.enabled": true,
+    "workbench.iconTheme": "material-icon-theme",
+    "notebook.cellToolbarVisibility": "hover",
+    "notebook.dragAndDropEnabled": false,
+    "git.openRepositoryInParentFolders": "never",
+    "[python]": {
+        "diffEditor.ignoreTrimWhitespace": false
+    },
+    "diffEditor.hideUnchangedRegions.enabled": true,
+
+    "compareFolders.showIdentical": false,
+    "workbench.colorTheme": "Tokyo Hack",
+    "nebulaOni.update.restoreConfiguration": {
+        "themeSettings": {
+            "background": "Grey",
+            "main": "Bumblebee",
+            "highlight": "Ultra Violet",
+            "focusBorder": "ON",
+            "fontStyle": "Italic",
+            "syntaxBrightness": "Normal",
+            "comments": "Dark Violet",
+            "favorite": "OFF"
+        },
+        "favoriteSettings": {
+            "background": "Glacial Blue",
+            "main": "Sakura",
+            "highlight": "Ultra Violet",
+            "focusBorder": "ON",
+            "fontStyle": "Italic",
+            "syntaxBrightness": "Dimmed",
+            "comments": "Dark Magenta",
+            "favorite": "Nebula Oni (Pegasus)"
+        }
+    },
+    "editor.lineNumbers": "relative",
+    "editor.renderFinalNewline": "on",
+    "cursor.composer.queueMessageDefaultBehavior": "stop-and-send",
+    "python.languageServer": "None",
+    "cursorpyright.disableLanguageServices": false,
+    "diffEditor.renderSideBySide": false,
+    "git.replaceTagsWhenPull": true, // optional, just good hygiene
+
+}
