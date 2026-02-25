@@ -1,5 +1,31 @@
 [alias]
 
+  # Fast forward all branches that have a remote and are trivially fast-forwardable
+  ff-all = "!f() { \
+    git fetch --all --prune && \
+    for b in $(git for-each-ref --format='%(refname:short)' refs/heads/); do \
+      u=$(git for-each-ref --format='%(upstream:short)' refs/heads/$b); \
+      if [ -n \"$u\" ] && git merge-base --is-ancestor $b $u; then \
+        git branch -f \"$b\" \"$u\" && \
+        echo \"Fast-forwarded $b → $u\"; \
+      fi; \
+    done; \
+  }; f"
+
+  # Dry-run: Fast forward all branches that have a remote and are trivially fast-forwardable
+  ff-all-dry = "!f() { \
+    git fetch --all --prune && \
+    for b in $(git for-each-ref --format='%(refname:short)' refs/heads/); do \
+      u=$(git for-each-ref --format='%(upstream:short)' refs/heads/$b); \
+      if [ -n \"$u\" ] && git merge-base --is-ancestor $b $u; then \
+        if [ \"$(git rev-parse $b)\" != \"$(git rev-parse $u)\" ]; then \
+          echo \"Would fast-forward $b → $u\"; \
+        fi; \
+      fi; \
+    done; \
+  }; f"
+
+
   # Worktree stuff
   wt = worktree
   wtl = wt list
@@ -174,6 +200,12 @@
   nuke = "!f() { \
       git push origin --delete "$@"; \
       git branch -d "$@"; \
+      git tag -d "$@"; \
+  }; f"
+  
+  nukenuke = "!f() { \
+      git push origin --delete "$@"; \
+      git branch -D "$@"; \
       git tag -d "$@"; \
   }; f"
 
