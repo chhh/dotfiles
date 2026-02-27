@@ -38,7 +38,7 @@
 
   # Move user-provided branch name to HEAD
   mh = "!f() { git fetch . HEAD:$1; }; f"
-  mh = "!f() { git fetch . HEAD:$1 && git push origin $1; }; f"
+  mhp = "!f() { git fetch . HEAD:$1 && git push origin $1; }; f"
   mmh = "!f() { git fetch . HEAD:main; }; f"
   mmhp = "!f() { git fetch . HEAD:main && git push origin main; }; f"
 
