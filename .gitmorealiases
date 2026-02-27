@@ -33,15 +33,18 @@
   # Print short git hash of the last commit
   lasthash = rev-parse --short HEAD
 
-  # Move main here
-  mmh = fetch . HEAD:main
+  
+  # Moving branches quickly without checkout
 
-  # Move main here + push to origin
-  mmhp = "!f() { \
-    git fetch . HEAD:main && git push origin main; \
-  }; f"
+  # Move user-provided branch name to HEAD
+  mh = "!f() { git fetch . HEAD:$1; }; f"
+  mh = "!f() { git fetch . HEAD:$1 && git push origin $1; }; f"
+  mmh = "!f() { git fetch . HEAD:main; }; f"
+  mmhp = "!f() { git fetch . HEAD:main && git push origin main; }; f"
 
-  # delete remote branch, allowing remotes/origin in the branch name 
+
+  # Delete remote branch, allowing remotes/origin in the branch name 
+  # Use case: you copied a remote branch name from gitk - this function can take it
   delete-remote = "!f() { \
     remote=$(echo "$1" | awk 'match($0,/^remotes\\/(\\w+)?\\//, a) {print a[1]}'); \
     replaced=$(echo "$1" | awk '{gsub(/^remotes\\/[^\\/]*\\//, \"\")}{print}'); \
