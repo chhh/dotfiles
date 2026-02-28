@@ -131,7 +131,7 @@
 
   fa = fetch --all --prune
   fp = fetch --prune
-  up = !git pull --ff-only --autostash --prune $@ && git submodule update --init --recursive
+  up = !git pull --ff-only --recurse-submodules --autostash --prune $@ && git submodule update --init --recursive
   
   # push everything including tags to default remote
   pt = !git push && git push --tags
