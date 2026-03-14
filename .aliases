@@ -3,6 +3,8 @@
 
 alias enveda-verify-commit="poetry run pre-commit run --all-files"
 
+alias claude-unhinged="claude --dangerously-skip-permissions"
+
 alias lac="ls -lAh --color=always"
 alias lacr="ls -lAh --color=always | less -r"
 alias ls="eza"

@@ -209,6 +209,11 @@
       git tag -d "$@"; \
   }; f"
   
+  fnuke = "!f() { \
+      git push origin --delete "$@"; \
+      git branch -D "$@"; \
+      git tag -d "$@"; \
+  }; f"
   nukenuke = "!f() { \
       git push origin --delete "$@"; \
       git branch -D "$@"; \
