@@ -16,6 +16,7 @@ vim.keymap.set('n', '<leader>e', ':Ex<CR>', { noremap = true, silent = true })
 vim.keymap.set('v', '>', '>gv', { desc = 'Indent and keep selection' })
 vim.keymap.set('v', '<', '<gv', { desc = 'Unindent and keep selection' })
 
+-- W - write to file, create all path dirs if they don't exist yet
 vim.api.nvim_create_user_command("W", function()
   local dir = vim.fn.expand("%:p:h")
   vim.fn.mkdir(dir, "p")
