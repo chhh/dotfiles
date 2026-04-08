@@ -37,9 +37,12 @@ vim.keymap.set("n", "N", "Nzzzv")
 -- Select the last pasted text
 vim.keymap.set("n", "gp", "`[v`]")
 
+-- Commit and push my dotfiles repo - useful when editing configs form inside nvim
 vim.api.nvim_create_user_command("SaveDotfiles", function()
   vim.cmd('!cd ~/src/dotfiles && git aacm "update configs" && git push')
 end, {})
+
+
 
 vim.pack.add({
   'https://github.com/nvim-mini/mini.nvim',
