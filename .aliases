@@ -8,7 +8,7 @@
 
 # tmux config block
 
-alias tms='tmux list-sessions'
+alias tmls='tmux list-sessions'
 alias tmw='tmux list-windows'
 alias tmp='tmux list-panes'
 
@@ -17,34 +17,56 @@ tm() {
     basename "$PWD" | sed 's/[^A-Za-z0-9_-]/_/g'
   }
 
+  _tm_has_window() {
+    local session="$1"
+    local window="$2"
+    command tmux list-windows -t "$session" -F '#{window_name}' 2>/dev/null | grep -Fxq "$window"
+  }
+
+  _tm_ensure_window() {
+    local session="$1"
+    local window="$2"
+    if ! _tm_has_window "$session" "$window"; then
+      command tmux new-window -d -t "$session" -n "$window" -c "$PWD"
+    fi
+  }
+
   case "${1-}" in
     "")
       command tmux
       ;;
+
     a|attach)
       shift
       [ "$#" -eq 0 ] && command tmux attach || command tmux attach -t "$1"
       ;;
+
     d|detach)
       [ -n "${TMUX:-}" ] && command tmux detach-client || { echo "Not inside tmux"; return 1; }
       ;;
+
     s|sessions)
       command tmux list-sessions
       ;;
+
     w|windows)
       [ "$#" -gt 1 ] && command tmux list-windows -t "$2" || command tmux list-windows
       ;;
+
     p|panes)
       [ "$#" -gt 1 ] && command tmux list-panes -t "$2" || command tmux list-panes
       ;;
+
     n|new)
       shift
       [ "$#" -eq 0 ] && command tmux new-session || command tmux new-session -s "$1"
       ;;
+
     nwd)
       name="$(_tm_session_name_from_pwd)"
       command tmux new-session -s "$name" -c "$PWD" -n shell
       ;;
+
     cwd)
       name="$(_tm_session_name_from_pwd)"
       if ! command tmux has-session -t "$name" 2>/dev/null; then
@@ -56,6 +78,26 @@ tm() {
         command tmux attach -t "$name"
       fi
       ;;
+
+    cwd4)
+      name="$(_tm_session_name_from_pwd)"
+
+      if ! command tmux has-session -t "$name" 2>/dev/null; then
+        command tmux new-session -d -s "$name" -c "$PWD" -n shell
+      fi
+
+      _tm_ensure_window "$name" shell
+      _tm_ensure_window "$name" run
+      _tm_ensure_window "$name" edit
+      _tm_ensure_window "$name" ai
+
+      if [ -n "${TMUX:-}" ]; then
+        command tmux switch-client -t "$name"
+      else
+        command tmux attach -t "$name"
+      fi
+      ;;
+
     *)
       command tmux "$@"
       ;;
