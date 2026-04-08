@@ -1,3 +1,5 @@
+# -*- mode: gitconfig; -*-
+# vim: set filetype=gitconfig:
 [alias]
 
   # Fast forward all branches that have a remote and are trivially fast-forwardable
@@ -39,6 +41,7 @@
   # Moving branches quickly without checkout
 
   # Move user-provided branch name to HEAD
+  mtp = "!f() { git merge $1; git push; }; f"
   mh = "!f() { git fetch . HEAD:$1; }; f"
   mhp = "!f() { git fetch . HEAD:$1 && git push origin $1; }; f"
   mmh = "!f() { git fetch . HEAD:main; }; f"

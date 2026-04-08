@@ -1,6 +1,10 @@
 #alias cdfc="cd /c/dmt.avt/source/bb-flight-control/"
 #alias cdmsio="cd /c/dmt.avt/source/bertis-msio/"
 
+
+alias tm="tmux"
+
+
 alias enveda-verify-commit="poetry run pre-commit run --all-files"
 
 alias claude-unhinged="claude --dangerously-skip-permissions"
