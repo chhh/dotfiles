@@ -38,11 +38,24 @@ tm() {
 
     a|attach)
       shift
-      [ "$#" -eq 0 ] && command tmux attach || command tmux attach -t "$1"
+      if [ ! -t 0 ] || [ ! -t 1 ]; then
+        echo "tm attach: no tty available"
+        return 1
+      fi
+      if [ "$#" -eq 0 ]; then
+        command tmux attach-session
+      else
+        command tmux attach-session -t "$1"
+      fi
       ;;
 
     d|detach)
-      [ -n "${TMUX:-}" ] && command tmux detach-client || { echo "Not inside tmux"; return 1; }
+      if [ -n "${TMUX:-}" ]; then
+        command tmux detach-client
+      else
+        echo "Not inside tmux"
+        return 1
+      fi
       ;;
 
     s|sessions)
@@ -50,16 +63,28 @@ tm() {
       ;;
 
     w|windows)
-      [ "$#" -gt 1 ] && command tmux list-windows -t "$2" || command tmux list-windows
+      if [ "$#" -gt 1 ]; then
+        command tmux list-windows -t "$2"
+      else
+        command tmux list-windows
+      fi
       ;;
 
     p|panes)
-      [ "$#" -gt 1 ] && command tmux list-panes -t "$2" || command tmux list-panes
+      if [ "$#" -gt 1 ]; then
+        command tmux list-panes -t "$2"
+      else
+        command tmux list-panes
+      fi
       ;;
 
     n|new)
       shift
-      [ "$#" -eq 0 ] && command tmux new-session || command tmux new-session -s "$1"
+      if [ "$#" -eq 0 ]; then
+        command tmux new-session
+      else
+        command tmux new-session -s "$1"
+      fi
       ;;
 
     nwd)
@@ -69,13 +94,19 @@ tm() {
 
     cwd)
       name="$(_tm_session_name_from_pwd)"
+
       if ! command tmux has-session -t "$name" 2>/dev/null; then
         command tmux new-session -d -s "$name" -c "$PWD" -n shell
       fi
+
       if [ -n "${TMUX:-}" ]; then
         command tmux switch-client -t "$name"
       else
-        command tmux attach -t "$name"
+        if [ ! -t 0 ] || [ ! -t 1 ]; then
+          echo "tm cwd: no tty available for attach"
+          return 1
+        fi
+        command tmux attach-session -t "$name"
       fi
       ;;
 
@@ -94,7 +125,11 @@ tm() {
       if [ -n "${TMUX:-}" ]; then
         command tmux switch-client -t "$name"
       else
-        command tmux attach -t "$name"
+        if [ ! -t 0 ] || [ ! -t 1 ]; then
+          echo "tm cwd4: no tty available for attach"
+          return 1
+        fi
+        command tmux attach-session -t "$name"
       fi
       ;;
 
