@@ -324,3 +324,26 @@ git7zbr() {
 	rm -rf temp_repo && \
 	mv $ZIP_NAME ..
 }
+
+git-rm-remote-ref() {
+  local ref="$1"
+  local remote branch
+
+  if [[ -z "$ref" ]]; then
+    echo "usage: git-rm-remote-ref remotes/<remote>/<branch>" >&2
+    return 2
+  fi
+
+  ref="${ref#refs/}"      # allow refs/remotes/origin/foo
+  ref="${ref#remotes/}"   # allow remotes/origin/foo
+
+  remote="${ref%%/*}"
+  branch="${ref#*/}"
+
+  if [[ -z "$remote" || -z "$branch" || "$remote" == "$branch" ]]; then
+    echo "Could not parse remote/branch from: $1" >&2
+    return 2
+  fi
+
+  git push -d "$remote" "$branch"
+}
