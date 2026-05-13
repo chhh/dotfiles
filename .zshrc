@@ -38,4 +38,6 @@ function zvm_config() {
   ZVM_VI_EDITOR="$EDITOR"
 }
 source $HOME/.zsh-vi-mode/zsh-vi-mode.plugin.zsh
+eval "$(zoxide init zsh)"
 
+alias oc-yolo='OPENCODE_PERMISSION="{\"*\":\"allow\"}" opencode'
