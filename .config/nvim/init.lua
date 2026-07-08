@@ -42,7 +42,9 @@ vim.api.nvim_create_user_command("SaveDotfiles", function()
   vim.cmd('!cd ~/src/dotfiles && git aacm "update configs" && git push')
 end, {})
 
-
+-- Neovim 0.13-dev leaves default 'packlockfile' as literal "$XDG_CONFIG_HOME/..." when
+-- XDG_CONFIG_HOME is unset; vim.pack then creates ./$XDG_CONFIG_HOME in cwd.
+vim.o.packlockfile = vim.fn.stdpath('config') .. '/nvim-pack-lock.json'
 
 vim.pack.add({
   'https://github.com/nvim-mini/mini.nvim',
