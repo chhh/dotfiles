@@ -5,6 +5,12 @@
 # tm got replaced with a powerful function in .zshrc
 # alias tm="tmux"
 
+alias mosh-to-vm='mosh vm -- tmux new -A -s vmmosh'
+
+# Append `-R` to `less` always to render colors
+export LESS='-R'
+alias rgl='rg --color=always'
+
 
 # tmux config block
 
