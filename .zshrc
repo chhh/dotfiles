@@ -37,7 +37,15 @@ eval "$(uv generate-shell-completion zsh)"
 function zvm_config() {
   ZVM_VI_EDITOR="$EDITOR"
 }
+
+function zvm_after_init() {
+  zle -N fzf-history-widget
+  bindkey -M emacs '^R' fzf-history-widget
+  bindkey -M viins '^R' fzf-history-widget
+  bindkey -M vicmd '^R' fzf-history-widget
+}
 source $HOME/.zsh-vi-mode/zsh-vi-mode.plugin.zsh
 eval "$(zoxide init zsh)"
 
 alias oc-yolo='OPENCODE_PERMISSION="{\"*\":\"allow\"}" opencode'
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
