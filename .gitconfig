@@ -56,7 +56,7 @@
 # 	cmd = \"\" \"$BASE\" \"$LOCAL\" \"$REMOTE\" \"$MERGED\"
 
 [core]
-	autocrlf = true
+	autocrlf = input
 	longpaths = true
 	excludesfile = ~/.gitignore_global
 #	editor = 'C:/Program Files/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin
@@ -74,6 +74,11 @@
 
 [credential "https://github.com"]
 	username = chhh
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
 
 [credential "https://gitlab.com"]
 	username = chhh
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential

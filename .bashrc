@@ -16,10 +16,13 @@ fi
 # This is used to start ssh-agent once when git-bash is started.
 # Saves typing the ssh key password every time you interact with
 # a remote repo.
+# git-bash/Windows only: USERPROFILE is unset on Linux/macOS, so this block
+# is skipped there (those platforms should use their native ssh-agent/keychain).
 
 # Usage of USERPROFILE variable requires an extra Env Var to be set:
 #   WSLENV=USERPROFILE/up
 #
+if [ -n "$USERPROFILE" ]; then
 #key_file=~/.ssh/dmtavt-home-desktop_rsa
 key_file=$USERPROFILE/.ssh/id_rsa
 env=~/.ssh/agent.env
@@ -43,4 +46,5 @@ elif [ "$SSH_AUTH_SOCK" ] && [ $agent_run_state = 1 ]; then
 fi
 
 unset env
+fi
 
