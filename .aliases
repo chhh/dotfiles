@@ -1,6 +1,34 @@
 #alias cdfc="cd /c/dmt.avt/source/bb-flight-control/"
 #alias cdmsio="cd /c/dmt.avt/source/bertis-msio/"
 
+search_blob_cache() {
+  if [ "$#" -ne 1 ]; then
+    printf 'Usage: search_blob_cache CACHE_FILE\n' >&2
+    return 2
+  fi
+
+  rg -oP '^.*\.d(?=/|$)' -- "$1" |
+    sort -u |
+    fzf --delimiter=/ --with-nth=-1
+}
+
+
+dfzf() {
+  if [ "$#" -lt 1 ] || [ "$#" -gt 2 ] || { [ "$#" -eq 2 ] && [ "$2" != "--full-path" ]; }; then
+    printf 'Usage: dfzf CACHE_FILE [--full-path]\n' >&2
+    return 2
+  fi
+
+  if [ "${2:-}" = "--full-path" ]; then
+    rg -oP '^.*\.d(?=/|$)' -- "$1" | sort -u | fzf
+  else
+    rg -oP '^.*\.d(?=/|$)' -- "$1" | sort -u |
+    fzf --delimiter=/ --with-nth=-1
+  fi
+}
+
+
+
 
 # tm got replaced with a powerful function in .zshrc
 # alias tm="tmux"
@@ -151,6 +179,7 @@ tm() {
 alias enveda-verify-commit="poetry run pre-commit run --all-files"
 
 alias claude-unhinged="claude --dangerously-skip-permissions"
+alias claude="claude --allow-dangerously-skip-permissions"
 
 alias lac="ls -lAh --color=always"
 alias lacr="ls -lAh --color=always | less -r"

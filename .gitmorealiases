@@ -34,10 +34,10 @@
 
   wt-rm = "!f(){ wt=\"$1\"; [ -z \"$wt\" ] && { echo \"usage: git wt-rm <worktree-path>\"; exit 2; }; [ \"$wt\" = \".\" ] && { echo \"refusing to remove .\"; exit 2; }; [ \"$wt\" = \"/\" ] && { echo \"refusing to remove /\"; exit 2; }; if git -C \"$wt\" rev-parse --is-inside-work-tree >/dev/null 2>&1; then git -C \"$wt\" submodule deinit -f --all >/dev/null 2>&1 || true; fi; git worktree remove -f \"$wt\" >/dev/null 2>&1 && exit 0; rm -rf \"$wt\"; git worktree prune; }; f"
   # Print short git hash of the last commit
-  
+
   lasthash = rev-parse --short HEAD
 
-  
+
   # Moving branches quickly without checkout
 
   # Move user-provided branch name to HEAD
@@ -49,7 +49,7 @@
   mdhp = "!f() { git fetch . HEAD:dev && git push origin dev; }; f"
 
 
-  # Delete remote branch, allowing remotes/origin in the branch name 
+  # Delete remote branch, allowing remotes/origin in the branch name
   # Use case: you copied a remote branch name from gitk - this function can take it
   delete-remote = "!f() { \
     remote=$(echo "$1" | awk 'match($0,/^remotes\\/(\\w+)?\\//, a) {print a[1]}'); \
@@ -60,7 +60,10 @@
 
   # alternative push -d origin using shell string substitution:
   delete-remote-alt = "!f() { git push -d origin \"${1#remotes/*/}\"; }; f"
-  
+
+  # short alias for delete-remote
+  del = delete-remote
+
   cot = !git checkout --track
   push-init = !git push -u origin `git branch --show-current`
   push-init-to = "!f() { git push -u $1 `git branch --show-current`; }; f"
@@ -78,7 +81,7 @@
 
   # detach HEAD
   detach = checkout --detach
-  
+
   # detach HEAD and delete the branch we were on
   detach-delete = "!f() { \
     cur=$(git branch --show-current); \
@@ -133,16 +136,16 @@
 
   # {add all commit message} commit all changed/new files with a message
   # this is the same as 'savem' alias
-  aacm = !git add -A && git commit -m 
+  aacm = !git add -A && git commit -m
 
   fa = fetch --all --prune
   fp = fetch --prune
   up = !git pull --ff-only --recurse-submodules --autostash --prune $@ && git submodule update --init --recursive
   add-subs = submodule update --init --recursive
-  
+
   # push everything including tags to default remote
   pt = !git push && git push --tags
-  
+
   # push current branch to origin, tracking it
   pc = !git push -u origin $(git rev-parse --abbrev-ref HEAD)
 
@@ -157,11 +160,11 @@
   }; f"
 
   cob = checkout -b
-  
+
   # save work as it goes, see 'undo' to use in tandem
   save = !git add -A && git commit -m 'SAVEPOINT'
   # same as 'aacm'
-  savem = !git add -A && git commit -m 
+  savem = !git add -A && git commit -m
   wip = commit -am "WIP"
   svp = !git save && git push
 
@@ -190,15 +193,15 @@
       git branch -D $2; \
       git tag -d $2; \
   }; f"
-  
-  # delete all local branches that have been merged into master (or the 
+
+  # delete all local branches that have been merged into master (or the
   # branch that you specify as the argument to this alias)
   # ${1-master} in shell script means: $1 (the 1st arguemnt) or default to 'master' if $1 not set
   bclean = "!f() { git checkout ${1-master} && git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs git branch -d; }; f"
   bdone = "!f() { git checkout ${1-master} && git up && git bclean ${1-master}; }; f"
   bcleanest-dry = "!f() { git checkout ${1-master} && git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs -I{} echo "git nuke {}"; }; f"
   bcleanest = "!f() { git checkout ${1-master} && git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs -I{} git nuke {}; }; f"
-  
+
   # Delete tags matching pattern both locally and remotely. $1 - remote, $2 - pattern
   # nuke-tags-on = "!f() { \
   #     git push -d $; \
@@ -212,7 +215,7 @@
       git branch -d "$@"; \
       git tag -d "$@"; \
   }; f"
-  
+
   fnuke = "!f() { \
       git push origin --delete "$@"; \
       git branch -D "$@"; \
@@ -234,7 +237,7 @@
   # 'fast-forward tracking' branches except for the checked out one, for this use `git pull --ff-only` or just `ff`
   fft = !sh -c 'git branch --format \"%(if)%(upstream:short)%(then)git push . %(upstream:short):%(refname:short)%(end)\" | sh' -
   ff = pull --ff-only
-  
+
   # shows branches that are not present on remote named origin
   list-local = !git branch -r | awk '{print $1}' | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk '{print $1}'
 

@@ -10,6 +10,12 @@ vim.g.maplocalleader = " "
 vim.opt.number = true          -- show absolute line number on current line
 vim.opt.relativenumber = true  -- show relative line numbers on other lines
 
+-- Set indent sizes
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
+vim.opt.softtabstop = 2
+vim.opt.expandtab = true
+
 -- Leader-e open netrw file explorer - just a test that lua config is working
 vim.keymap.set('n', '<leader>e', ':Ex<CR>', { noremap = true, silent = true })
 
