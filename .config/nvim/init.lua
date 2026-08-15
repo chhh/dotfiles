@@ -32,6 +32,9 @@ end, { bar = true})
 -- Note: vim.keymap.set() is non-recursive by default (equivalent to :noremap),
 -- so we don't need to pass { noremap = true }.
 
+-- Simple navigation between opened buffers
+vim.keymap.set("n", "<leader>b", ":ls<CR>:b ", { desc = "List and switch buffers" })
+
 -- Crazy up/down replaced with centered up/down
 vim.keymap.set("n", "<C-d>", "<C-d>zz")
 vim.keymap.set("n", "<C-u>", "<C-u>zz")
