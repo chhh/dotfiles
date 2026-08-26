@@ -55,4 +55,19 @@ vim.pack.add({
   'https://github.com/nvim-mini/mini.nvim',
   'https://github.com/neovim/nvim-lspconfig',
   'https://github.com/nvim-treesitter/nvim-treesitter',
+  'https://github.com/folke/tokyonight.nvim',
+})
+
+-- Load optional plugins
+vim.cmd('packadd tokyonight.nvim')
+vim.cmd('packadd nvim-treesitter')
+vim.cmd('colorscheme tokyonight')
+
+-- Treesitter: install markdown parsers, start highlighting
+require('nvim-treesitter').install({ 'markdown', 'markdown_inline' }):wait(300000)
+
+vim.api.nvim_create_autocmd('FileType', {
+  callback = function()
+    pcall(vim.treesitter.start)
+  end,
 })
