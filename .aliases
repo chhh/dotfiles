@@ -181,6 +181,29 @@ alias enveda-verify-commit="poetry run pre-commit run --all-files"
 alias claude-unhinged="claude --dangerously-skip-permissions"
 alias claude="claude --allow-dangerously-skip-permissions"
 
+# yolo [args...] -- claude with my system prompt, all permission checks off.
+# `command claude` bypasses the alias above: zsh expands aliases inside function
+# bodies at definition time, so a bare `claude` here would silently inherit
+# --allow-dangerously-skip-permissions and the flag list would stop being the
+# whole story. Both flags are spelled out instead.
+yolo() {
+  command claude \
+    --allow-dangerously-skip-permissions \
+    --dangerously-skip-permissions \
+    --system-prompt-file "$HOME/sys-prompt.md" \
+    "$@"
+}
+
+# tame [args...] -- same system prompt as yolo, but permissions stay on in auto
+# mode. `command claude` for the same reason as above: it also keeps the
+# --allow-dangerously-skip-permissions from the alias out of this one.
+tame() {
+  command claude \
+    --permission-mode auto \
+    --system-prompt-file "$HOME/sys-prompt.md" \
+    "$@"
+}
+
 alias lac="ls -lAh --color=always"
 alias lacr="ls -lAh --color=always | less -r"
 alias ls="eza"
