@@ -36,6 +36,8 @@ if (( $+commands[brew] )); then
 fi
 
 # fzf keybindings/completions.
+export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 # Better than original: cache generated script instead of spawning `fzf --zsh` every shell.
 if (( $+commands[fzf] )); then
   _fzf_zsh_cache="${XDG_CACHE_HOME:-$HOME/.cache}/fzf-zsh.zsh"
