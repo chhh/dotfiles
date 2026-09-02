@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install this repo's AI agent skills (ai/skills/<name>/SKILL.md, plus any
 # supporting files alongside it) into the local per-user skill directories
-# that Claude Code and Pi discover automatically.
+# that Claude Code, Pi, and Codex discover automatically.
 #
 # For each skill found under ai/skills/, and for each known agent target,
 # asks for confirmation before installing (default: yes on Enter, matching
@@ -49,8 +49,8 @@ if [[ ! -d "$SKILLS_DIR" ]]; then
 fi
 
 # name -> local skills directory each agent reads on its own, per-user.
-TARGET_NAMES=("Claude Code" "Pi agent")
-TARGET_DIRS=("$HOME/.claude/skills" "$HOME/.pi/agent/skills")
+TARGET_NAMES=("Claude Code" "Pi agent" "Codex")
+TARGET_DIRS=("$HOME/.claude/skills" "$HOME/.pi/agent/skills" "${CODEX_HOME:-$HOME/.codex}/skills")
 
 confirm() {
     # confirm "prompt text" -- returns 0 (yes) if AUTO_YES, or the user
