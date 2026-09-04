@@ -1,24 +1,58 @@
 ---
 name: obsidian-log
-description: Log work progress, findings, and gotchas from a coding session into the shared Obsidian knowledge-base vault (a daily journal entry plus, for substantial investigations, a linked page). Use when the user asks to log/journal/write up/record this session, note a finding for later, or when a session produced a non-trivial investigation, success, or failure worth remembering across sessions.
+description: Log work progress, findings, and gotchas from a coding session into an Obsidian knowledge-base vault - a daily journal entry in the global cross-project vault, plus, for substantial investigations, a linked page in either that vault or the current repo's own docs/ vault. Also writes "dated docs" on request. Use when the user asks to log/journal/write up/record this session, note a finding for later, asks for a dated doc, or when a session produced a non-trivial investigation, success, or failure worth remembering across sessions.
 ---
 
 # Obsidian work log
 
-Records what an agent did, found, or got stuck on into a shared Obsidian vault so
-future sessions (by this agent or any other) don't have to rediscover it. Two
-kinds of writes:
+Records what an agent did, found, or got stuck on into an Obsidian vault so
+future sessions (by this agent or any other) don't have to rediscover it.
 
-- **Journal entry** (`journals/YYYY-MM-DD.md`) — one line, always.
-- **Page** (`pages/<Title>.md`) — only for a substantial investigation, success,
-  or failure; linked from the journal entry.
+There are **two vaults**, with different jobs:
+
+- **The global vault** — on Google Drive, spans every project. Holds the daily
+  journal and pages whose lesson *transfers* to other codebases.
+- **The repo vault** — `<repo>/docs`, when that repo has one. Holds
+  implementation knowledge about *that* codebase, ships in every clone, and is
+  versioned alongside the code it describes. **No journals**: a daily log is
+  inherently cross-project and cannot be split across repos.
+
+So there are three kinds of write:
+
+- **Journal entry** (`journals/YYYY-MM-DD.md`, global vault only) — one line,
+  always.
+- **Page** (`pages/<Title>.md`, in *one* of the two vaults) — only for a
+  substantial investigation, success, or failure; linked from the journal entry.
+- **Dated note** (`<repo>/docs/YYYY-MM-DD_HH-mm_slug.md`) — only when the user
+  asks for a "dated doc". Immutable once written. See Step 5.
 
 This skill works the same way whether you are Claude Code or a Pi agent. Nothing
 here is tool-specific: it only needs the ability to read/list/write files.
 
-## Step 1 — Resolve the vault path. Do this first, every time.
+## Step 0 — Is there a repo vault?
 
-The vault lives on Google Drive for account `dmitriy.avtonomov@gmail.com`, at the
+Check the current project for `docs/.obsidian/` **or** `docs/README.md`
+describing a vault. If either exists, that repo has a vault at `<repo>/docs` and
+it is a candidate target for pages (Step 3.5). Note that `docs/.obsidian/` is
+usually git-ignored, so a fresh clone may have only the `README.md` — treat
+either as sufficient evidence.
+
+No repo vault is not an error and not something to fix: most repos don't have
+one, and creating one is a decision for the user, not a side effect of logging.
+Write the page to the global vault and move on.
+
+A repo vault's layout differs from the global one:
+
+- `docs/pages/<Title>.md` — living pages, same format as the global vault's.
+- `docs/YYYY-MM-DD_HH-mm_slug.md` — immutable dated notes at the vault root.
+- **No `journals/`.** Never create one.
+- Other undated files (`RELEASING.md`, `how-it-works/`) are the repo's own
+  reference docs. Leave them alone.
+
+## Step 1 — Resolve the global vault path. Do this first, every time.
+
+The global vault lives on Google Drive for account
+`dmitriy.avtonomov@gmail.com`, at the
 relative path `My Drive/my/chhh-kb/ai-obsidian` inside the Drive root. Known
 absolute defaults:
 
@@ -100,9 +134,37 @@ future session shouldn't have to re-derive.
 Don't write a page for: a quick lookup, a one-line fix with an obvious cause, or
 anything the journal sentence already fully captures.
 
-Before creating a new page, check `pages/` for an existing page on the same
-topic from a recent session — prefer extending that page (e.g. adding a
-"follow-up" dated subsection) over fragmenting the history across duplicates.
+Before creating a new page, check `pages/` **in both vaults** for an existing
+page on the same topic from a recent session — prefer extending that page (e.g.
+adding a "follow-up" dated subsection) over fragmenting the history across
+duplicates. A topic already covered in one vault stays in that vault; do not
+start a second copy in the other because the routing rule below now points
+elsewhere.
+
+## Step 3.5 — Which vault does the page go in?
+
+Only when the repo has a vault (Step 0). The test is **not** which project the
+work came from — nearly all work comes from some project. It is:
+
+> Would this page help someone working on a *different* codebase?
+
+- **Yes → global vault.** A release pattern, an algorithm idea, a toolchain
+  gotcha, a way of structuring something. The lesson outlives the repo.
+- **No → repo vault.** It only makes sense with that repo's source in front of
+  you: how a particular module behaves, why a specific default is what it is,
+  what a run measured on that codebase.
+
+When a page has both — a transferable insight discovered while doing
+repo-specific work — put it where its *bulk* belongs and mention the other in
+prose. Don't split one investigation across two vaults.
+
+**Wikilinks do not cross vaults.** A `[[link]]` to a page in the other vault
+renders broken forever. Name that page in prose instead, and say which vault it
+is in.
+
+If you are unsure, prefer the global vault: a page that turns out to be
+repo-specific is still findable there, whereas one buried in a repo nobody has
+cloned is not.
 
 ## Step 4 — Write the page
 
@@ -163,18 +225,43 @@ Use the date the work concluded. If the work spanned multiple days, add
 
 ### Linking
 
-- Link every page from at least one journal entry (Step 2).
-- Cross-link related pages with `[[Wikilinks]]` where it helps navigation —
-  don't force it.
+- Link every page from at least one journal entry (Step 2) — including a page
+  written to a repo vault. The journal is the timeline for *all* work, so a repo
+  page that no journal entry mentions is invisible. Wikilinks don't reach across
+  vaults, so for a repo page give the repo-relative path in backticks instead:
+  `` antimass: `docs/pages/<Title>.md` ``.
+- Cross-link related pages *within the same vault* with `[[Wikilinks]]` where it
+  helps navigation — don't force it.
+
+## Step 5 — Dated notes ("dated doc")
+
+Only when the user asks for a "dated doc" / "put it in a dated doc". Write
+`<repo>/docs/YYYY-MM-DD_HH-mm_slug.md`, timestamp from `date` rather than
+guessed, content being the full write-up and not a summary. Create `docs/` if it
+does not exist.
+
+These are **records, not pages**: immutable once written, because their value is
+that they say what was true and what was measured on that date. Never edit one
+after the fact — write a new one. Never move or rename one either: in a mature
+repo, source comments cite these paths (antimass has 44 such citation sites
+across 23 files), and renaming silently breaks every one.
+
+A dated note and a page are complements, not alternatives. Substantial work
+often deserves both: the note for the run and its numbers, the page for what the
+code now does.
 
 ## What not to do
 
 - Don't ask the user for permission to log — logging is the point of invoking
-  this skill. Do ask if the vault path is genuinely unknown (Step 1.2) or the
-  vault directory is missing (Step 1.3) — those are real blockers, not
-  formalities.
+  this skill. Do ask if the *global* vault path is genuinely unknown (Step 1.2)
+  or its directory is missing (Step 1.3) — those are real blockers, not
+  formalities. A *missing repo vault* is neither; it just means the page goes to
+  the global vault.
+- Don't create a repo vault, or a `journals/` inside one. Those are the user's
+  decisions, not a side effect of logging.
 - Don't write a page for everything; most sessions warrant only a journal line.
 - Don't overwrite an existing daily note or page — append/extend.
+- Don't write the same page into both vaults. One topic, one page, one vault.
 - Don't pad the journal entry with process narrative ("First I explored X, then
   I tried Y, then..."). That belongs in the page, if there is one. The journal
   entry is the one-sentence gist.
