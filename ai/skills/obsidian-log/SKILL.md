@@ -188,6 +188,31 @@ tags: [optional, short, lowercase, kebab-case]
 Use the date the work concluded. If the work spanned multiple days, add
 `date_started: YYYY-MM-DD` alongside `date`.
 
+### Provenance keys (add each one when its value is known)
+
+These connect the page to the work that produced it, so that a ticket, a
+session, or a commit can lead back to the page — in Obsidian property views and
+in Mothership, which indexes this frontmatter. Add a key only when you know its
+value; omit it rather than guess.
+
+```yaml
+tickets: [ms-42]                     # Mothership ticket IDs this work served
+session: claude:f101dbe7-f9d8-457a-9408-e4ec06c7854a   # <agent>:<native session identity>
+host: Mac                            # short machine name
+commits: [abc1234, def5678]          # short SHAs of commits this session produced
+```
+
+- `session` — inside Herdr (`HERDR_ENV=1`) read it from
+  `herdr agent get "$HERDR_PANE_ID"` → `.result.agent.agent_session`: the
+  `agent` field and the `value` field, joined with `:`. For Claude the value is
+  the session UUID; for Pi it is the session JSONL path. Outside Herdr, omit the
+  key.
+- `host` — `hostname -s` on macOS/Linux, `hostname` on Windows. Use the same
+  value every time on a given machine.
+- `commits` — short SHAs in the project's repository. If the project spans
+  several repositories, prefix each with the repo name: `antimass@abc1234`.
+- `tickets` — omit until a Mothership workspace with tickets exists.
+
 ### Body sections, in this order
 
 1. **`## The task`** — what was asked. Quote the input prompt. If the task was
