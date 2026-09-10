@@ -39,6 +39,10 @@ alias mosh-to-vm='mosh vm -- tmux new -A -s vmmosh'
 export LESS='-R'
 alias rgl='rg --color=always'
 
+# Debian/Ubuntu ship the fd-find package's binary as `fdfind` (name clash
+# with an existing mikmod `fd` package), so alias it to the expected name.
+command -v fdfind >/dev/null 2>&1 && alias fd='fdfind'
+
 
 # tmux config block
 
