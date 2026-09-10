@@ -7,7 +7,7 @@ DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 link() {
   src="$DOTFILES_DIR/$1"
-  dst="$HOME/$1"
+  dst="$HOME/${2:-$1}"
   if [ -e "$dst" ] || [ -L "$dst" ]; then
     if [ "$(readlink "$dst" 2>/dev/null || true)" = "$src" ]; then
       echo "ok:      $dst"
@@ -28,3 +28,6 @@ done
 
 mkdir -p "$HOME/.config"
 link .config/nvim
+
+# yolo/tame in .aliases expect $HOME/sys-prompt.md
+link ai/sys-prompt.md sys-prompt.md
