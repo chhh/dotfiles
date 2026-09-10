@@ -80,5 +80,8 @@
 [credential "https://gitlab.com"]
 	username = chhh
 [credential "https://gist.github.com"]
-	helper = 
+	helper =
 	helper = !/usr/bin/gh auth git-credential
+
+[safe]
+	directory = *
