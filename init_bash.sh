@@ -20,7 +20,7 @@ link() {
   echo "linked:  $dst -> $src"
 }
 
-for f in .bashrc .aliases .aliases-bash \
+for f in .bashrc .aliases \
          .tmux.conf .dircolors \
          .gitconfig .gitaliases .gitmorealiases .gitignore_global; do
   link "$f"

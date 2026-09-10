@@ -9,9 +9,6 @@ fi
 if [ -e $HOME/.aliases ]; then
     source $HOME/.aliases
 fi
-if [ -e $HOME/.aliases-bash ]; then
-    source $HOME/.aliases-bash
-fi
 
 # This is used to start ssh-agent once when git-bash is started.
 # Saves typing the ssh key password every time you interact with

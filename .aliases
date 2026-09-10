@@ -208,6 +208,7 @@ alias lac="ls -lAh --color=always"
 alias lacr="ls -lAh --color=always | less -r"
 alias ls="eza"
 alias ll="eza -ll --color=always"
+alias la="eza -lA --color=always"
 alias l="eza -ll --color=always | less -R"
 
 #alias ll="ls -la --color=auto"
