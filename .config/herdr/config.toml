@@ -1,0 +1,16 @@
+onboarding = false
+
+[ui]
+show_agent_labels_on_pane_borders = true
+
+agent_panel_sort = "priority"
+[ui.toast]
+delivery = "system"
+
+[theme]
+name = "catppuccin"
+auto_switch = false
+
+[keys]
+cycle_pane_previous = "cmd+["
+cycle_pane_next = "cmd+]"
