@@ -74,14 +74,14 @@
 
 [credential "https://github.com"]
 	username = chhh
-	helper = 
-	helper = !/usr/bin/gh auth git-credential
+	helper =
+	helper = !gh auth git-credential
 
 [credential "https://gitlab.com"]
 	username = chhh
 [credential "https://gist.github.com"]
 	helper =
-	helper = !/usr/bin/gh auth git-credential
+	helper = !gh auth git-credential
 
 [safe]
 	directory = *
