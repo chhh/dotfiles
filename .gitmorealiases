@@ -83,12 +83,29 @@
   # detach HEAD
   detach = checkout --detach
 
-  # detach HEAD and delete the branch we were on
-  detach-delete = "!f() { \
+  # detach HEAD and delete the branch we were on (local only)
+  detach-delete-local = "!f() { \
     cur=$(git branch --show-current); \
     echo "deleting branch: $cur"; \
     git checkout --detach; \
     git branch -d $cur; \
+  }; f"
+
+  # detach (if needed), delete branch locally, and delete it from every
+  # remote it actually exists on. Takes an optional branch name; defaults
+  # to the current branch.
+  detach-delete-all = "!f() { \
+    BRANCH=${1:-$(git branch --show-current)}; \
+    if [ "$BRANCH" = "$(git branch --show-current)" ]; then \
+      git checkout --detach; \
+    fi; \
+    git branch -d "$BRANCH"; \
+    for remote in $(git remote); do \
+      if git ls-remote --exit-code --heads "$remote" "$BRANCH" >/dev/null 2>&1; then \
+        echo "deleting $BRANCH from $remote"; \
+        git push "$remote" --delete "$BRANCH"; \
+      fi; \
+    done; \
   }; f"
 
 
