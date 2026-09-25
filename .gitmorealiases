@@ -109,6 +109,28 @@
   }; f"
 
 
+  # Merge current branch into dev without checking out dev
+  # Then fast forward current branch to the merge commit
+  # Push both to origin
+  mdev = "!f() { \
+    set -e; \
+    b=$(git symbolic-ref --short HEAD); \
+    [ \"$b\" != dev ] || { echo 'mdev: run it from the feature branch'; exit 1; }; \
+    git diff --quiet && git diff --cached --quiet || { echo 'mdev: commit or stash first'; exit 1; }; \
+    git fetch origin --prune; \
+    if ! out=$(git merge-tree --write-tree --name-only origin/dev \"$b\"); then \
+            echo \"mdev: $b conflicts with origin/dev, nothing changed. Conflicted files:\"; \
+            echo \"$out\" | tail -n +2; exit 1; \
+    fi; \
+    tree=$(echo \"$out\" | head -n 1); \
+    m=$(git commit-tree \"$tree\" -p origin/dev -p \"$b\" -m \"Merge branch '$b' into dev\"); \
+    git push origin \"$m:refs/heads/dev\"; \
+    git branch -f dev \"$m\" 2>/dev/null || echo 'mdev: local dev not moved (checked out in another worktree?)'; \
+    git merge --ff-only --quiet \"$m\"; \
+    git push origin \"$b\"; \
+  }; f"
+
+
   # detach, delete given local branch, checkout fresh remote-tracking
   rebranch = "!f() { \
     BRANCH=${1}; \
