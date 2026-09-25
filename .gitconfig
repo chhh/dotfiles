@@ -85,3 +85,7 @@
 
 [safe]
 	directory = *
+[beads]
+	role = maintainer
+[init]
+	defaultBranch = main
