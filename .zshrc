@@ -9,6 +9,10 @@ export VISUAL="$EDITOR"
 # Better than original: one init instead of `init --path` + `init -`, saving ~130ms per shell.
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
+#
+# GoLang setup - I use this for gas city
+export PATH="$(go env GOPATH)/bin:$PATH"
+
 # Loads pyenv shims, completions, and shell function; `--no-rehash` skips slow shim scan each startup.
 # If newly installed Python console commands do not appear, run `pyenv rehash` once manually.
 eval "$(pyenv init - --no-rehash zsh)"
