@@ -111,6 +111,8 @@
     done; \
   }; f"
 
+  dda = detach-delete-all
+
   switch-del = "!f() { \
     F=; \
     if [ \"$1\" = -f ]; then F=-f; shift; fi; \
@@ -188,9 +190,9 @@
   # this is the same as 'savem' alias
   aacm = !git add -A && git commit -m
 
-  fa = fetch --all --prune
+  fa = fetch --all --prune --tags --force
   fp = fetch --prune
-  up = !git pull --ff-only --recurse-submodules --autostash --prune $@ && git submodule update --init --recursive
+  up = !git pull --ff-only --recurse-submodules --autostash --prune --tags --force $@ && git submodule update --init --recursive
   add-subs = submodule update --init --recursive
 
   # push everything including tags to default remote
