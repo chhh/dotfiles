@@ -94,12 +94,15 @@
   # detach (if needed), delete branch locally, and delete it from every
   # remote it actually exists on. Takes an optional branch name; defaults
   # to the current branch.
+  # Optional leading -f force-deletes locally (git branch -D).
   detach-delete-all = "!f() { \
+    D=-d; \
+    if [ \"$1\" = -f ]; then D=-D; shift; fi; \
     BRANCH=${1:-$(git branch --show-current)}; \
     if [ "$BRANCH" = "$(git branch --show-current)" ]; then \
       git checkout --detach; \
     fi; \
-    git branch -d "$BRANCH"; \
+    git branch $D "$BRANCH"; \
     for remote in $(git remote); do \
       if git ls-remote --exit-code --heads "$remote" "$BRANCH" >/dev/null 2>&1; then \
         echo "deleting $BRANCH from $remote"; \
@@ -108,6 +111,13 @@
     done; \
   }; f"
 
+  switch-del = "!f() { \
+    F=; \
+    if [ \"$1\" = -f ]; then F=-f; shift; fi; \
+    [ -n \"$1\" ] || { echo 'usage: git switch-del [-f] <new-branch-name>'; exit 2; }; \
+    git detach-delete-all $F && \
+    git switch -c \"$1\"; \
+  }; f"
 
   # Merge current branch into dev without checking out dev
   # Then fast forward current branch to the merge commit
