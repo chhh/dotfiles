@@ -153,6 +153,26 @@
   # so it carries on with the rest. Local branches only; fetch first for remote ones.
   mnm = "!git bnm | sed \"s/^[*+ ]*//\" | while read -r b; do git merge --no-ff --no-edit \"$b\" || break; done"
 
+  # Rebase, then merge, every local branch not yet merged into the current one (rebase merge
+  # no-merged): like `mnm`, but each branch is first rebased onto the current branch, then merged
+  # with --no-ff, one branch at a time. Each rebase therefore starts from the previous merge, so
+  # the history reads as a clean sequence of "branch, merge commit, branch, merge commit", with
+  # no criss-crossing. Branches come from `git bnm` (alphabetical). It refuses a detached HEAD or
+  # a dirty tree, and stops on the first failure. Already-merged ones stay merged.
+  # REWRITES the rebased branches' commits: a branch already pushed needs a force-push after.
+  # If a rebase conflicts: resolve it, `git rebase --continue`, `git switch <the branch you were
+  # on>`, run `git rmnm` again: that branch is already on top, so it only merges, and the rest
+  # follow. To give up on it: `git rebase --abort`. Local branches only.
+  rmnm = "!f() { \
+    cur=$(git symbolic-ref --short -q HEAD) || { echo 'rmnm: detached HEAD, switch to a branch'; exit 1; }; \
+    git diff --quiet && git diff --cached --quiet || { echo 'rmnm: commit or stash first'; exit 1; }; \
+    for b in $(git bnm | sed \"s/^[*+ ]*//\"); do \
+      echo \"rmnm: $b onto $cur\"; \
+      git rebase \"$cur\" \"$b\" || { echo \"rmnm: rebase of $b stopped: resolve, git rebase --continue, git switch $cur, rerun\"; exit 1; }; \
+      git switch -q \"$cur\" && git merge --no-ff --no-edit \"$b\" || { echo \"rmnm: merge of $b failed\"; exit 1; }; \
+    done; \
+  }; f"
+
   # detach, delete given local branch, checkout fresh remote-tracking
   rebranch = "!f() { \
     BRANCH=${1}; \
