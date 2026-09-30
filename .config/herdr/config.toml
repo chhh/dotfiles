@@ -12,5 +12,5 @@ name = "catppuccin"
 auto_switch = false
 
 [keys]
-cycle_pane_previous = "cmd+["
-cycle_pane_next = "cmd+]"
+cycle_pane_previous = ["cmd+[", "ctrl+alt+["]
+cycle_pane_next = ["cmd+]", "ctrl+alt+]"]
