@@ -143,6 +143,16 @@
   }; f"
 
 
+  # Merge every local branch not yet merged into the current one (merge no-merged).
+  # How it works: `git bnm` (= branch --no-merged, defined elsewhere in the config) lists the
+  # branches; sed drops the "* " / "+ " marker git puts before a branch checked out in another
+  # worktree; the loop does one `git merge --no-ff --no-edit` per branch, in listing order
+  # (alphabetical), and `|| break` stops at the first one that fails, i.e. a conflict.
+  # Merges made before it stay. After a conflict, resolve it and `git commit --no-edit` (or
+  # `git merge --abort`), then run `git mnm` again: merged branches drop out of the list,
+  # so it carries on with the rest. Local branches only; fetch first for remote ones.
+  mnm = "!git bnm | sed \"s/^[*+ ]*//\" | while read -r b; do git merge --no-ff --no-edit \"$b\" || break; done"
+
   # detach, delete given local branch, checkout fresh remote-tracking
   rebranch = "!f() { \
     BRANCH=${1}; \
