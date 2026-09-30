@@ -29,5 +29,9 @@ done
 mkdir -p "$HOME/.config"
 link .config/nvim
 
+# herdr keeps sockets/logs in ~/.config/herdr, so link only the config file
+mkdir -p "$HOME/.config/herdr"
+link .config/herdr/config.toml
+
 # yolo/tame in .aliases expect $HOME/sys-prompt.md
 link ai/sys-prompt.md sys-prompt.md

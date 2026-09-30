@@ -138,3 +138,4 @@ fi
 export UV_LINK_MODE=copy
 
 eval "$(starship init bash)"
+. "$HOME/.cargo/env"
