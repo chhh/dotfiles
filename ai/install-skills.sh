@@ -13,12 +13,18 @@
 #   ./install-skills.sh              # interactive, asks before each install
 #   ./install-skills.sh -y           # install everywhere, no prompts
 #   ./install-skills.sh --yes
+#   ./install-skills.sh -y --plugins # also install ponytail, caveman, context-mode
+#
+# Also merges ai/claude-model-picker.json into ~/.claude/settings.json and
+# offers (default: no) to install the Claude Code plugins ponytail, caveman,
+# and context-mode. With -y, plugins are skipped unless --plugins is given.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
 SKILLS_DIR="$SCRIPT_DIR/skills"
 
 AUTO_YES=0
+WITH_PLUGINS=0
 
 usage() {
     # Print the header comment block (everything from line 2 up to the first
@@ -30,6 +36,9 @@ for arg in "$@"; do
     case "$arg" in
         -y|--yes)
             AUTO_YES=1
+            ;;
+        --plugins)
+            WITH_PLUGINS=1
             ;;
         -h|--help)
             usage
@@ -64,6 +73,13 @@ confirm() {
     [[ -z "$reply" || "$reply" =~ ^[Yy]$ ]]
 }
 
+confirm_no() {
+    # Like confirm, but default is no (Enter alone declines).
+    local reply
+    read -r -p "$1 [y/N] " reply
+    [[ "$reply" =~ ^[Yy]$ ]]
+}
+
 installed_any=0
 
 for skill_path in "$SKILLS_DIR"/*/; do
@@ -92,4 +108,36 @@ done
 
 if [[ "$installed_any" -eq 0 ]]; then
     echo "Nothing installed."
+fi
+
+# --- Claude Code model picker (merged into ~/.claude/settings.json) ---------
+PICKER_FILE="$SCRIPT_DIR/claude-model-picker.json"
+SETTINGS="$HOME/.claude/settings.json"
+if [[ -f "$PICKER_FILE" ]] && command -v jq >/dev/null; then
+    if confirm "Merge model picker config (4 models) into $SETTINGS"; then
+        mkdir -p "$(dirname "$SETTINGS")"
+        [[ -f "$SETTINGS" ]] || echo '{}' > "$SETTINGS"
+        jq -s '.[0] * .[1]' "$SETTINGS" "$PICKER_FILE" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
+        echo "  merged: modelPicker -> $SETTINGS"
+    fi
+fi
+
+# --- Claude Code plugins (optional) ------------------------------------------
+# name@marketplace  marketplace-source
+PLUGINS=("ponytail@ponytail DietrichGebert/ponytail"
+         "caveman@caveman JuliusBrussee/caveman"
+         "context-mode@context-mode mksglu/context-mode")
+
+if command -v claude >/dev/null; then
+    for entry in "${PLUGINS[@]}"; do
+        plugin="${entry% *}"; source="${entry#* }"
+        # Plugins are opt-in: -y skips them unless --plugins is given.
+        if [[ "$AUTO_YES" -eq 1 && "$WITH_PLUGINS" -eq 0 ]]; then
+            continue
+        fi
+        if [[ "$AUTO_YES" -eq 1 ]] || confirm_no "Install Claude Code plugin $plugin"; then
+            command claude plugin marketplace add "$source" || true
+            command claude plugin install "$plugin"
+        fi
+    done
 fi

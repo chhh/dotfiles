@@ -1,0 +1,27 @@
+{
+  "modelPicker": {
+    "options": [
+      {
+        "model": "opus",
+        "label": "Opus (best, 1M)",
+        "description": "Latest Opus, largest context"
+      },
+      {
+        "model": "sonnet",
+        "label": "Sonnet (best, 1M)",
+        "description": "Latest Sonnet, largest context"
+      },
+      {
+        "model": "fable",
+        "label": "Fable",
+        "description": "Latest Fable"
+      },
+      {
+        "model": "mythos",
+        "label": "Mythos",
+        "description": "Latest Mythos"
+      }
+    ],
+    "replaceBuiltInOptions": true
+  }
+}
