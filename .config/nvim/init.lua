@@ -63,9 +63,7 @@ vim.cmd('packadd tokyonight.nvim')
 vim.cmd('packadd nvim-treesitter')
 vim.cmd('colorscheme tokyonight')
 
--- Treesitter: install markdown parsers, start highlighting
-require('nvim-treesitter').install({ 'markdown', 'markdown_inline' }):wait(300000)
-
+-- Treesitter: start highlighting (parsers are installed further below)
 vim.api.nvim_create_autocmd('FileType', {
   callback = function()
     pcall(vim.treesitter.start)
@@ -114,7 +112,19 @@ vim.keymap.set('n', '[q', '<cmd>cprevious<cr>zz',  { desc = 'Previous quickfix i
 vim.keymap.set('n', '<leader>q', '<cmd>copen<cr>', { desc = 'Open quickfix list' })
 
 -- ---- treesitter: syntax-aware highlighting, indent, text objects ------
-require('nvim-treesitter').install({ 'rust', 'toml', 'markdown', 'markdown_inline', 'lua' })
+-- Parser install needs external tools. If any are missing, skip the install and
+-- show ONE single-line notification instead of one error per parser.
+local missing = {}
+for _, exe in ipairs({ 'tree-sitter', 'cc', 'tar', 'curl' }) do
+  if vim.fn.executable(exe) == 0 then table.insert(missing, exe) end
+end
+if #missing == 0 then
+  require('nvim-treesitter').install({ 'rust', 'toml', 'markdown', 'markdown_inline', 'lua' })
+else
+  vim.schedule(function()
+    vim.notify('treesitter parsers not installed, missing: ' .. table.concat(missing, ', '), vim.log.levels.WARN)
+  end)
+end
 vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'rust', 'toml', 'markdown', 'lua' },
   callback = function()
