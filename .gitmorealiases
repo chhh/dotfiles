@@ -1,6 +1,56 @@
 # -*- mode: gitconfig; -*-
 # vim: set filetype=gitconfig:
 [alias]
+  # List the branches (local and remote-tracking) already merged into a base: the ones safe to clean up.
+  # Usage: git merged [options] [base]        base defaults to the current branch (or e.g. origin/main)
+  #   -s, --skip-same     also skip branches whose tip IS the base's commit (a fresh branch with no
+  #                       commits of its own counts as merged otherwise)
+  #   -e, --exclude RE    skip branches whose name matches the extended regex RE; repeatable
+  #   --since DATE        only branches whose LAST commit is on or after DATE (inclusive)
+  #   --before DATE       only branches whose LAST commit is before DATE (exclusive); both together
+  #                       select a range [since, before). YYYY-MM-DD, a prefix like 2026-09 works.
+  #                       The same two options as list-nonmerged.
+  #   -d, --dates         print "<last-commit-date> <branch>" instead of just the name
+  #   -n, --no-fetch      do not run `git fetch --all --prune` first (it is on by default)
+  # The base itself is never listed, nor its copy on any remote (origin/dev, upstream/dev, ...),
+  # nor any <remote>/HEAD. Newest last commit first.
+  #
+  # Examples:
+  #   git merged                                      # merged into the current branch
+  #   git merged -s                                   # ...without the same-commit ones
+  #   git merged -e '(^|/)main$'                      # ...without main and origin/main, upstream/main, ...
+  #   git merged -e '(^|/)main$' -e '^release/'       # several exclusions
+  #   git merged --before 2026-09-01 -d               # merged, last commit before Sep 1, with dates
+  #   git merged --since 2026-08 --before 2026-09     # merged, last commit in August
+  #   git merged -n -s --before 2026-09 origin/main   # merged into origin/main, no fetch
+  merged = "!f() { \
+    base=; same=; since=; before=; excl=; dates=; fetch=1; \
+    while [ $# -gt 0 ]; do \
+      case $1 in \
+        -s|--skip-same) same=1;; \
+        -d|--dates) dates=1;; \
+        -n|--no-fetch) fetch=;; \
+        --since|--before|-e|--exclude) \
+          [ $# -ge 2 ] || { echo \"merged: $1 needs a value\"; exit 2; }; \
+          case $1 in --since) since=$2;; --before) before=$2;; *) excl=\"${excl:+$excl|}($2)\";; esac; shift;; \
+        -*) echo \"merged: unknown option $1\"; exit 2;; \
+        *) base=$1;; \
+      esac; shift; \
+    done; \
+    base=${base:-$(git rev-parse --abbrev-ref HEAD)}; \
+    [ -z \"$fetch\" ] || git fetch --all --prune -q; \
+    n=$base; for r in $(git remote); do case $base in $r/*) n=${base#$r/};; esac; done; \
+    ex=\"HEAD $n\"; for r in $(git remote); do ex=\"$ex $r $r/HEAD $r/$n\"; done; \
+    tip=; [ -z \"$same\" ] || tip=$(git rev-parse \"$base^{commit}\"); \
+    git for-each-ref --merged=\"$base\" --sort=-committerdate --format='%(committerdate:short) %(refname:short) %(objectname)' refs/heads refs/remotes \
+      | EX=\"$ex\" SINCE=\"$since\" BEFORE=\"$before\" TIP=\"$tip\" RE=\"$excl\" DATES=\"$dates\" awk 'BEGIN { n = split(ENVIRON[\"EX\"], a, \" \"); for (i = 1; i <= n; i++) x[a[i]] = 1; re = ENVIRON[\"RE\"]; since = ENVIRON[\"SINCE\"]; before = ENVIRON[\"BEFORE\"]; tip = ENVIRON[\"TIP\"]; dates = ENVIRON[\"DATES\"] } \
+        $2 in x { next } \
+        length(since) && $1 < since { next } \
+        length(before) && $1 >= before { next } \
+        length(tip) && $3 == tip { next } \
+        length(re) && $2 ~ re { next } \
+        { if (length(dates)) print $1, $2; else print $2 }'; \
+  }; f"
 
   # Fast forward all branches that have a remote and are trivially fast-forwardable
   ff-all = "!f() { \
@@ -144,59 +194,79 @@
 
 
   # List branches NOT merged into a base (default: the current branch), newest first, each with
-  # the date of its last commit. Local and remote together, or either one. The four
-  # merge-*-nonmerged / rebase-merge-*-nonmerged aliases below are built on it.
+  # the date of its last commit. Local and remote together, or either one. The merge-*-nonmerged
+  # and rebase-merge-*-nonmerged aliases below are built on it and pass their options through.
   #
-  # Usage: git list-nonmerged [since-date] [scope] [base]
-  #   since-date  YYYY-MM-DD (a prefix like 2026-10 works): only branches whose LAST commit is on
-  #               or after it (not the branch's creation date). Default 0000-00-00 = no filter;
-  #               pass it to reach scope or base.
-  #   scope       what to look at, quoted when it has two parts. Default "refs/heads refs/remotes".
-  #                 refs/heads = local only, refs/remotes = remote-tracking only.
-  #   base        what "merged" means: a branch counts as not merged when its tip is not in this.
-  #               Default HEAD. Any ref works, e.g. origin/dev.
-  # Remote results are only as fresh as the last `git fetch`. origin/HEAD is left out.
+  # Usage: git list-nonmerged [options] [base]
+  #   --since DATE    only branches whose LAST commit is on or after DATE (inclusive)
+  #   --before DATE   only branches whose LAST commit is before DATE (exclusive)
+  #                   Both together select a range [since, before). DATE is YYYY-MM-DD; a prefix
+  #                   like 2026-10 works: --since 2026-10 = from Oct 1, --before 2026-10 = up to
+  #                   the end of September. `git merged` takes the same two options.
+  #   -l, --local     local branches only
+  #   -r, --remote    remote-tracking branches only (default: both)
+  #   base            what "merged" means: a branch counts as not merged when its tip is not in
+  #                   this. Default HEAD. Any ref works, e.g. origin/dev.
+  # A lone date-like argument (2026-10 or 2026-10-05) is read as --since, as it used to be.
+  # Remote results are only as fresh as the last `git fetch`. <remote>/HEAD is left out.
   # Output is "<date> <branch>"; for just the names: git list-nonmerged ... | awk '{print $2}'
   #
   # Examples:
-  #   git list-nonmerged                                           # everything not in HEAD
-  #   git list-nonmerged 2026-10-01                                # ...with a commit since Oct 1
-  #   git list-nonmerged 2026-10-01 refs/remotes origin/dev        # remote only, not in origin/dev
-  #   git list-nonmerged 0000-00-00 refs/heads                     # local only, no date filter
-  #   git list-nonmerged 0000-00-00 "refs/heads refs/remotes" origin/main  # everything not in origin/main
+  #   git list-nonmerged                                      # everything not in HEAD
+  #   git list-nonmerged --since 2026-10                      # ...with a last commit since Oct 1
+  #   git list-nonmerged --since 2026-09 --before 2026-10     # ...during September
+  #   git list-nonmerged -r --before 2026-09 origin/dev       # remote only, older than Sep 1, not in origin/dev
+  #   git list-nonmerged -l                                   # local only
   list-nonmerged = "!f() { \
-    git for-each-ref --no-merged=${3:-HEAD} --sort=-committerdate --format='%(committerdate:short) %(refname:short)' ${2:-refs/heads refs/remotes} \
-      | awk -v d=\"${1:-0000-00-00}\" '$1>=d && $2!~/HEAD$/ && $2!=\"origin\"'; \
+    since=; before=; scope='refs/heads refs/remotes'; base=HEAD; \
+    while [ $# -gt 0 ]; do \
+      case $1 in \
+        --since|--before) \
+          [ $# -ge 2 ] || { echo \"list-nonmerged: $1 needs a value\"; exit 2; }; \
+          case $1 in --since) since=$2;; *) before=$2;; esac; shift;; \
+        -l|--local) scope=refs/heads;; \
+        -r|--remote) scope=refs/remotes;; \
+        -*) echo \"list-nonmerged: unknown option $1\"; exit 2;; \
+        [0-9][0-9][0-9][0-9]-[0-9][0-9]|[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) since=$1;; \
+        *) base=$1;; \
+      esac; shift; \
+    done; \
+    git for-each-ref --no-merged=\"$base\" --sort=-committerdate --format='%(committerdate:short) %(refname:short)' $scope \
+      | EX=\"$(git remote | tr '\\n' ' ')\" SINCE=\"$since\" BEFORE=\"$before\" awk 'BEGIN { n = split(ENVIRON[\"EX\"], a, \" \"); for (i = 1; i <= n; i++) x[a[i]] = 1; since = ENVIRON[\"SINCE\"]; before = ENVIRON[\"BEFORE\"] } \
+        $2 in x || $2 ~ /HEAD$/ { next } \
+        length(since) && $1 < since { next } \
+        length(before) && $1 >= before { next } \
+        { print }'; \
   }; f"
 
   # Merge every LOCAL branch not yet merged into the current one, one --no-ff merge commit each.
-  # Usage: git merge-local-nonmerged [since-date]   (since-date as in list-nonmerged)
-  # The branches come from `git list-nonmerged <since-date> refs/heads` (newest commit first) and
+  # Usage: git merge-local-nonmerged [--since DATE] [--before DATE]   (the options of list-nonmerged, passed on)
+  # The branches come from `git list-nonmerged --local ...` (newest commit first) and
   # are merged in that order. Stops at the first conflict (non-zero exit), leaving that merge in
   # progress and the earlier ones done. Resolve it and `git commit --no-edit` (or
   # `git merge --abort`), then run it again: merged branches drop out of the list, so it carries on.
   merge-local-nonmerged = "!f() { \
-    for b in $(git list-nonmerged \"${1:-0000-00-00}\" refs/heads | awk '{print $2}'); do \
+    for b in $(git list-nonmerged --local \"$@\" | awk '{print $2}'); do \
       echo \"merge-local-nonmerged: $b\"; \
       git merge --no-ff --no-edit \"$b\" || exit 1; \
     done; \
   }; f"
 
   # Same for REMOTE-tracking branches: merges origin/<name> etc. into the current branch.
-  # Usage: git merge-remote-nonmerged [since-date]. Fetch first (git fa) for fresh results.
+  # Usage: git merge-remote-nonmerged [--since DATE] [--before DATE]. Fetch first (git fa) for fresh results.
   # Merge commits read "Merge remote-tracking branch 'origin/x'". Stops at the first conflict; to
   # continue, same as merge-local-nonmerged. The remote branches are untouched, so once you push
   # the current branch they count as merged and drop off the list.
   merge-remote-nonmerged = "!f() { \
-    for b in $(git list-nonmerged \"${1:-0000-00-00}\" refs/remotes | awk '{print $2}'); do \
+    for b in $(git list-nonmerged --remote \"$@\" | awk '{print $2}'); do \
       echo \"merge-remote-nonmerged: $b\"; \
       git merge --no-ff --no-edit \"$b\" || exit 1; \
     done; \
   }; f"
 
   # merge-remote-nonmerged, then fast-forward those remote branches to the new tip, so they end up
-  # level with the current branch. Usage: git merge-ff-remote-nonmerged [since-date]
-  # Steps: remember the branches `git list-nonmerged <since-date> refs/remotes` gives, merge them
+  # level with the current branch. Usage: git merge-ff-remote-nonmerged [--since DATE] [--before DATE]
+  # Steps: remember the branches `git list-nonmerged --remote ...` gives, merge them
   # all (stops on the first conflict: nothing is pushed, resolve and rerun), `git push` the
   # current branch, then push its tip to each remote branch. The branch pushes are plain
   # fast-forwards (the current branch now contains each of them), never forced: if someone moved
@@ -205,11 +275,10 @@
   # Needs an upstream on the current branch. Every listed remote branch becomes a copy of the
   # current branch, including the other branches' work: other people's branches are moved.
   merge-ff-remote-nonmerged = "!f() { \
-    since=\"${1:-0000-00-00}\"; \
     git symbolic-ref -q HEAD >/dev/null || { echo 'merge-ff-remote-nonmerged: detached HEAD, switch to a branch'; exit 1; }; \
-    branches=$(git list-nonmerged \"$since\" refs/remotes | awk '{print $2}'); \
+    branches=$(git list-nonmerged --remote \"$@\" | awk '{print $2}'); \
     [ -n \"$branches\" ] || { echo 'merge-ff-remote-nonmerged: no non-merged remote branches'; exit 0; }; \
-    git merge-remote-nonmerged \"$since\" || exit 1; \
+    git merge-remote-nonmerged \"$@\" || exit 1; \
     git push || { echo 'merge-ff-remote-nonmerged: push of the current branch failed, remote branches left alone'; exit 1; }; \
     failed=; \
     for r in $branches; do \
@@ -223,7 +292,7 @@
   # first rebased onto the current branch, then merged with --no-ff, one branch at a time. Each
   # rebase starts from the previous merge, so the history reads as a clean sequence of "branch,
   # merge commit, branch, merge commit" with no criss-crossing.
-  # Usage: git rebase-merge-local-nonmerged [since-date]. Refuses a detached HEAD or a dirty tree;
+  # Usage: git rebase-merge-local-nonmerged [--since DATE] [--before DATE]. Refuses a detached HEAD or a dirty tree;
   # stops on the first failure.
   # REWRITES the rebased branches' commits: one already pushed needs a force-push after.
   # If a rebase conflicts: resolve it, `git rebase --continue`, `git switch <the branch you were
@@ -232,7 +301,7 @@
   rebase-merge-local-nonmerged = "!f() { \
     cur=$(git symbolic-ref --short -q HEAD) || { echo 'rebase-merge-local-nonmerged: detached HEAD, switch to a branch'; exit 1; }; \
     git diff --quiet && git diff --cached --quiet || { echo 'rebase-merge-local-nonmerged: commit or stash first'; exit 1; }; \
-    for b in $(git list-nonmerged \"${1:-0000-00-00}\" refs/heads | awk '{print $2}'); do \
+    for b in $(git list-nonmerged --local \"$@\" | awk '{print $2}'); do \
       echo \"rebase-merge-local-nonmerged: $b onto $cur\"; \
       git rebase \"$cur\" \"$b\" || { echo \"rebase of $b stopped: resolve, git rebase --continue, git switch $cur, rerun\"; exit 1; }; \
       git switch -q \"$cur\" && git merge --no-ff --no-edit \"$b\" || { echo \"merge of $b failed\"; exit 1; }; \
@@ -276,11 +345,11 @@
     [ -z \"$skipped\" ] || { echo \"rebase-merge-remote-branches: skipped (conflicts):$skipped\"; exit 1; }; \
   }; f"
 
-  # Same, for every remote branch `git list-nonmerged <since-date> refs/remotes` lists (see
+  # Same, for every remote branch `git list-nonmerged --remote ...` lists (see
   # rebase-merge-remote-branches above for how it works and its catch).
-  # Usage: git rebase-merge-remote-nonmerged [since-date]
+  # Usage: git rebase-merge-remote-nonmerged [--since DATE] [--before DATE]
   rebase-merge-remote-nonmerged = "!f() { \
-    branches=$(git list-nonmerged \"${1:-0000-00-00}\" refs/remotes | awk '{print $2}'); \
+    branches=$(git list-nonmerged --remote \"$@\" | awk '{print $2}'); \
     [ -n \"$branches\" ] || { echo 'rebase-merge-remote-nonmerged: no non-merged remote branches'; exit 0; }; \
     git rebase-merge-remote-branches $branches; \
   }; f"
