@@ -206,6 +206,11 @@
   #                   the end of September. `git merged` takes the same two options.
   #   -l, --local     local branches only
   #   -r, --remote    remote-tracking branches only (default: both)
+  #   --descendants   only branches that are DESCENDANTS of the base: the base is an ancestor of their
+  #                   tip (git: they "contain" it), so they are strictly ahead and merging one is a
+  #                   fast-forward; the history behind the base is not involved
+  #   --diverged      the opposite: only branches that are not descendants of the base, i.e. forked
+  #                   before it and moved on separately (they need a real merge or a rebase)
   #   base            what "merged" means: a branch counts as not merged when its tip is not in
   #                   this. Default HEAD. Any ref works, e.g. origin/dev.
   # Remote results are only as fresh as the last `git fetch`. <remote>/HEAD is left out.
@@ -217,8 +222,10 @@
   #   git list-nonmerged --since 2026-09 --before 2026-10     # ...during September
   #   git list-nonmerged -r --before 2026-09 origin/dev       # remote only, older than Sep 1, not in origin/dev
   #   git list-nonmerged -l                                   # local only
+  #   git list-nonmerged --descendants                        # strictly ahead of HEAD: fast-forwardable
+  #   git list-nonmerged -r --diverged --since 2026-10        # remote ones that need a real merge
   list-nonmerged = "!f() { \
-    since=; before=; scope='refs/heads refs/remotes'; base=HEAD; \
+    since=; before=; scope='refs/heads refs/remotes'; base=HEAD; rel=; \
     while [ $# -gt 0 ]; do \
       case $1 in \
         --since|--before) \
@@ -226,12 +233,15 @@
           case $1 in --since) since=$2;; *) before=$2;; esac; shift;; \
         -l|--local) scope=refs/heads;; \
         -r|--remote) scope=refs/remotes;; \
+        --descendants) rel=--contains;; \
+        --diverged) rel=--no-contains;; \
         -*) echo \"list-nonmerged: unknown option $1\"; exit 2;; \
         *) base=$1;; \
       esac; shift; \
     done; \
     git rev-parse --verify -q \"$base^{commit}\" >/dev/null || { echo \"list-nonmerged: unknown base: $base (dates go in --since / --before)\"; exit 2; }; \
-    git for-each-ref --no-merged=\"$base\" --sort=-committerdate --format='%(committerdate:short) %(refname:short)' $scope \
+    relarg=; [ -z \"$rel\" ] || relarg=\"$rel=$base\"; \
+    git for-each-ref --no-merged=\"$base\" $relarg --sort=-committerdate --format='%(committerdate:short) %(refname:short)' $scope \
       | EX=\"$(git remote | tr '\\n' ' ')\" SINCE=\"$since\" BEFORE=\"$before\" awk 'BEGIN { n = split(ENVIRON[\"EX\"], a, \" \"); for (i = 1; i <= n; i++) x[a[i]] = 1; since = ENVIRON[\"SINCE\"]; before = ENVIRON[\"BEFORE\"] } \
         $2 in x || $2 ~ /HEAD$/ { next } \
         length(since) && $1 < since { next } \
