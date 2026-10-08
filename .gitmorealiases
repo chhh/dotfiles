@@ -173,6 +173,30 @@
     done; \
   }; f"
 
+  # List branches NOT merged into a base (default: the current branch), newest first, each with
+  # the date of its last commit. Local and remote together, or either one. For the branches to
+  # merge with `mnm` / `rmnm`, but also for remote ones, which those two do not cover.
+  #
+  # Usage: git list-nonmerged [since-date] [scope] [base]
+  #   since-date  YYYY-MM-DD: only branches whose LAST commit is on or after it (not the branch's
+  #               creation date). Default 0000-00-00 = no filter; pass it to reach scope or base.
+  #   scope       what to look at, quoted when it has two parts. Default "refs/heads refs/remotes".
+  #                 refs/heads = local only, refs/remotes = remote-tracking only.
+  #   base        what "merged" means: a branch counts as not merged when its tip is not in this.
+  #               Default HEAD. Any ref works, e.g. origin/dev.
+  # Remote results are only as fresh as the last `git fetch`. origin/HEAD is left out.
+  #
+  # Examples:
+  #   git list-nonmerged                                           # everything not in HEAD
+  #   git list-nonmerged 2026-10-01                                # ...with a commit since Oct 1
+  #   git list-nonmerged 2026-10-01 refs/remotes origin/dev        # remote only, not in origin/dev
+  #   git list-nonmerged 0000-00-00 refs/heads                     # local only, no date filter
+  #   git list-nonmerged 0000-00-00 "refs/heads refs/remotes" origin/main  # everything not in origin/main
+  list-nonmerged = "!f() { \
+    git for-each-ref --no-merged=${3:-HEAD} --sort=-committerdate --format='%(committerdate:short) %(refname:short)' ${2:-refs/heads refs/remotes} \
+      | awk -v d=\"${1:-0000-00-00}\" '$1>=d && $2!~/HEAD$/ && $2!=\"origin\"'; \
+  }; f"
+
   # detach, delete given local branch, checkout fresh remote-tracking
   rebranch = "!f() { \
     BRANCH=${1}; \
