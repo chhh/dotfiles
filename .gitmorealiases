@@ -239,28 +239,50 @@
     done; \
   }; f"
 
-  # Same for REMOTE-tracking branches, with a catch: a remote branch cannot be rebased in place.
-  # Each one is rebased onto the current branch as a detached copy, and that copy is merged with
-  # --no-ff ("Merge branch 'x' into <current>"). The remote branch itself is NOT changed, so after
-  # you push, git still lists it as not merged (its commits differ from the rebased copy) until
-  # you force-push the rebased tips back to it. Rerunning skips branches whose changes are
-  # already in the current branch (`git cherry`), so it is safe to rerun.
-  # Usage: git rebase-merge-remote-nonmerged [since-date]. Refuses a detached HEAD or a dirty tree.
-  # Unlike the local one it does NOT stop on a conflict: resuming would redo the same rebase from
-  # the unchanged remote branch. A conflicting rebase is aborted, that branch is skipped, the rest
-  # are processed, and the skipped ones are listed at the end (exit 1). Merge those by hand,
-  # resolving the conflict in the merge: git merge --no-ff origin/<name>
-  rebase-merge-remote-nonmerged = "!f() { \
-    cur=$(git symbolic-ref --short -q HEAD) || { echo 'rebase-merge-remote-nonmerged: detached HEAD, switch to a branch'; exit 1; }; \
-    git diff --quiet && git diff --cached --quiet || { echo 'rebase-merge-remote-nonmerged: commit or stash first'; exit 1; }; \
-    for b in $(git list-nonmerged \"${1:-0000-00-00}\" refs/remotes | awk '{print $2}'); do \
-      git cherry \"$cur\" \"$b\" | grep -q '^+' || { echo \"rebase-merge-remote-nonmerged: skip $b (already in $cur)\"; continue; }; \
-      echo \"rebase-merge-remote-nonmerged: $b onto $cur\"; \
-      git rebase \"$cur\" \"$b\" || { git rebase --abort; echo \"rebase-merge-remote-nonmerged: SKIPPED $b (conflicts with $cur; merge it by hand: git merge --no-ff $b)\"; skipped=\"$skipped $b\"; continue; }; \
+  # Rebase, then merge, the remote branches YOU NAME, one at a time, in the order given.
+  # Usage: git rebase-merge-remote-branches <branch>...
+  #   git rebase-merge-remote-branches remotes/origin/feat/self-ion-scan remotes/origin/feat/plug-align
+  # Names may be pasted from gitk (remotes/origin/x) or written origin/x; all are checked first, so
+  # a typo stops the run before anything changes. Each branch is rebased onto the current branch,
+  # then merged with --no-ff ("Merge branch 'x' into <current>"), and the next rebase starts from
+  # that merge: a clean ladder of "branch, merge commit" in gitk, no criss-crossing.
+  # The catch with REMOTE branches: one cannot be rebased in place. Each is rebased as a detached
+  # copy and that copy is merged. The remote branch itself is NOT changed, so after you push, git
+  # still lists it as not merged (its commits differ from the rebased copy) until you force-push
+  # the rebased tips back to it. Rerunning skips branches whose changes are already in the current
+  # branch (`git cherry`), so it is safe to rerun. Refuses a detached HEAD or a dirty tree.
+  # It does NOT stop on a conflict: resuming would redo the same rebase from the unchanged remote
+  # branch. A conflicting rebase is aborted, that branch is skipped, the rest are processed, and the
+  # skipped ones are listed at the end (exit 1). Merge those by hand, resolving the conflict in the
+  # merge: git merge --no-ff origin/<name>
+  rebase-merge-remote-branches = "!f() { \
+    [ $# -gt 0 ] || { echo 'usage: git rebase-merge-remote-branches <remote-branch>...  (remotes/origin/x or origin/x)'; exit 1; }; \
+    cur=$(git symbolic-ref --short -q HEAD) || { echo 'rebase-merge-remote-branches: detached HEAD, switch to a branch'; exit 1; }; \
+    git diff --quiet && git diff --cached --quiet || { echo 'rebase-merge-remote-branches: commit or stash first'; exit 1; }; \
+    refs=; \
+    for a in \"$@\"; do \
+      r=\"${a#remotes/}\"; \
+      git rev-parse --verify -q \"refs/remotes/$r\" >/dev/null || { echo \"rebase-merge-remote-branches: no such remote branch: $a\"; exit 1; }; \
+      refs=\"$refs $r\"; \
+    done; \
+    skipped=; \
+    for b in $refs; do \
+      git cherry \"$cur\" \"$b\" | grep -q '^+' || { echo \"rebase-merge-remote-branches: skip $b (already in $cur)\"; continue; }; \
+      echo \"rebase-merge-remote-branches: $b onto $cur\"; \
+      git rebase \"$cur\" \"$b\" || { git rebase --abort; echo \"rebase-merge-remote-branches: SKIPPED $b (conflicts with $cur; merge it by hand: git merge --no-ff $b)\"; skipped=\"$skipped $b\"; continue; }; \
       tip=$(git rev-parse HEAD); \
       git switch -q \"$cur\" && git merge --no-ff --no-edit -m \"Merge branch '${b#*/}' into $cur\" \"$tip\" || { echo \"merge of $b failed\"; exit 1; }; \
     done; \
-    [ -z \"$skipped\" ] || { echo \"rebase-merge-remote-nonmerged: skipped (conflicts):$skipped\"; exit 1; }; \
+    [ -z \"$skipped\" ] || { echo \"rebase-merge-remote-branches: skipped (conflicts):$skipped\"; exit 1; }; \
+  }; f"
+
+  # Same, for every remote branch `git list-nonmerged <since-date> refs/remotes` lists (see
+  # rebase-merge-remote-branches above for how it works and its catch).
+  # Usage: git rebase-merge-remote-nonmerged [since-date]
+  rebase-merge-remote-nonmerged = "!f() { \
+    branches=$(git list-nonmerged \"${1:-0000-00-00}\" refs/remotes | awk '{print $2}'); \
+    [ -n \"$branches\" ] || { echo 'rebase-merge-remote-nonmerged: no non-merged remote branches'; exit 0; }; \
+    git rebase-merge-remote-branches $branches; \
   }; f"
 
   # detach, delete given local branch, checkout fresh remote-tracking
