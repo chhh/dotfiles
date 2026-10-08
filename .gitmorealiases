@@ -38,6 +38,7 @@
       esac; shift; \
     done; \
     base=${base:-$(git rev-parse --abbrev-ref HEAD)}; \
+    git rev-parse --verify -q \"$base^{commit}\" >/dev/null || { echo \"merged: unknown base: $base (dates go in --since / --before)\"; exit 2; }; \
     [ -z \"$fetch\" ] || git fetch --all --prune -q; \
     n=$base; for r in $(git remote); do case $base in $r/*) n=${base#$r/};; esac; done; \
     ex=\"HEAD $n\"; for r in $(git remote); do ex=\"$ex $r $r/HEAD $r/$n\"; done; \
@@ -207,7 +208,6 @@
   #   -r, --remote    remote-tracking branches only (default: both)
   #   base            what "merged" means: a branch counts as not merged when its tip is not in
   #                   this. Default HEAD. Any ref works, e.g. origin/dev.
-  # A lone date-like argument (2026-10 or 2026-10-05) is read as --since, as it used to be.
   # Remote results are only as fresh as the last `git fetch`. <remote>/HEAD is left out.
   # Output is "<date> <branch>"; for just the names: git list-nonmerged ... | awk '{print $2}'
   #
@@ -227,10 +227,10 @@
         -l|--local) scope=refs/heads;; \
         -r|--remote) scope=refs/remotes;; \
         -*) echo \"list-nonmerged: unknown option $1\"; exit 2;; \
-        [0-9][0-9][0-9][0-9]-[0-9][0-9]|[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) since=$1;; \
         *) base=$1;; \
       esac; shift; \
     done; \
+    git rev-parse --verify -q \"$base^{commit}\" >/dev/null || { echo \"list-nonmerged: unknown base: $base (dates go in --since / --before)\"; exit 2; }; \
     git for-each-ref --no-merged=\"$base\" --sort=-committerdate --format='%(committerdate:short) %(refname:short)' $scope \
       | EX=\"$(git remote | tr '\\n' ' ')\" SINCE=\"$since\" BEFORE=\"$before\" awk 'BEGIN { n = split(ENVIRON[\"EX\"], a, \" \"); for (i = 1; i <= n; i++) x[a[i]] = 1; since = ENVIRON[\"SINCE\"]; before = ENVIRON[\"BEFORE\"] } \
         $2 in x || $2 ~ /HEAD$/ { next } \
