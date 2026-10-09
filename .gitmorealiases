@@ -205,6 +205,10 @@
   #                   Both together select a range [since, before). DATE is YYYY-MM-DD; a prefix
   #                   like 2026-10 works: --since 2026-10 = from Oct 1, --before 2026-10 = up to
   #                   the end of September. `git merged` takes the same two options.
+  #   -e, --exclude RE  leave out branches whose name matches the extended regex RE; repeatable.
+  #                   Matched against the name as listed (origin/feat/x for a remote branch,
+  #                   unanchored: -e 'wip|^origin/old/' ). merge-nonmerged and
+  #                   rebase-merge-nonmerged take it too.
   #   -l, --local     local branches only
   #   -r, --remote    remote-tracking branches only (default: both)
   #   --descendants   only branches that are DESCENDANTS of the base: the base is an ancestor of their
@@ -223,15 +227,19 @@
   #   git list-nonmerged --since 2026-09 --before 2026-10     # ...during September
   #   git list-nonmerged -r --before 2026-09 origin/dev       # remote only, older than Sep 1, not in origin/dev
   #   git list-nonmerged -l                                   # local only
+  #   git list-nonmerged -e '/wip/' -e '^origin/old'          # skip branches matching either regex
   #   git list-nonmerged --descendants                        # strictly ahead of HEAD: fast-forwardable
   #   git list-nonmerged -r --diverged --since 2026-10        # remote ones that need a real merge
   list-nonmerged = "!f() { \
-    since=; before=; scope='refs/heads refs/remotes'; base=HEAD; rel=; \
+    since=; before=; scope='refs/heads refs/remotes'; base=HEAD; rel=; exre=; \
     while [ $# -gt 0 ]; do \
       case $1 in \
         --since|--before) \
           [ $# -ge 2 ] || { echo \"list-nonmerged: $1 needs a value\"; exit 2; }; \
           case $1 in --since) since=$2;; *) before=$2;; esac; shift;; \
+        -e|--exclude) \
+          [ $# -ge 2 ] || { echo \"list-nonmerged: $1 needs a value\"; exit 2; }; \
+          exre=\"${exre:+$exre|}($2)\"; shift;; \
         -l|--local) scope=refs/heads;; \
         -r|--remote) scope=refs/remotes;; \
         --descendants) rel=--contains;; \
@@ -243,8 +251,9 @@
     git rev-parse --verify -q \"$base^{commit}\" >/dev/null || { echo \"list-nonmerged: unknown base: $base (dates go in --since / --before)\"; exit 2; }; \
     relarg=; [ -z \"$rel\" ] || relarg=\"$rel=$base\"; \
     git for-each-ref --no-merged=\"$base\" $relarg --sort=-committerdate --format='%(committerdate:short) %(refname:short)' $scope \
-      | EX=\"$(git remote | tr '\\n' ' ')\" SINCE=\"$since\" BEFORE=\"$before\" awk 'BEGIN { n = split(ENVIRON[\"EX\"], a, \" \"); for (i = 1; i <= n; i++) x[a[i]] = 1; since = ENVIRON[\"SINCE\"]; before = ENVIRON[\"BEFORE\"] } \
+      | EX=\"$(git remote | tr '\\n' ' ')\" SINCE=\"$since\" BEFORE=\"$before\" EXRE=\"$exre\" awk 'BEGIN { n = split(ENVIRON[\"EX\"], a, \" \"); for (i = 1; i <= n; i++) x[a[i]] = 1; since = ENVIRON[\"SINCE\"]; before = ENVIRON[\"BEFORE\"]; exre = ENVIRON[\"EXRE\"] } \
         $2 in x || $2 ~ /HEAD$/ { next } \
+        length(exre) && $2 ~ exre { next } \
         length(since) && $1 < since { next } \
         length(before) && $1 >= before { next } \
         { print }'; \
@@ -283,7 +292,7 @@
   # `git list-nonmerged <opts>` is the preview, this is the action.
   # Usage: git merge-nonmerged [--push] [list-nonmerged options] [base]
   #        git merge-nonmerged [--push] --branches <branch>...
-  #   Takes exactly the options of list-nonmerged (--since, --before, -l, -r, --descendants,
+  #   Takes exactly the options of list-nonmerged (--since, --before, -e, -l, -r, --descendants,
   #   --diverged, base): `git list-nonmerged <opts>` shows what `git merge-nonmerged <opts>` will merge.
   #   --branches  merge the branches YOU NAME instead (everything after it): local, remote, or pasted
   #               from gitk (remotes/origin/x). Cannot be combined with the filters.
@@ -349,7 +358,7 @@
     skipped=; failed=; pairs=; \
     for b in $refs; do \
       if git show-ref --verify -q \"refs/heads/$b\"; then full=refs/heads/$b; name=$b; else full=refs/remotes/$b; name=${b#*/}; fi; \
-      git cherry \"$cur\" \"$full\" | grep -q '^+' || { echo \"rebase-merge-nonmerged: skip $b (already in $cur)\"; continue; }; \
+      git cherry \"$cur\" \"$full\" | grep -q '^+' || { echo \"rebase-merge-nonmerged: skip $b (its commits already exist in $cur, safe to delete this branch)\"; continue; }; \
       echo \"rebase-merge-nonmerged: $b onto $cur\"; \
       old=$(git rev-parse \"$full\"); \
       git rebase \"$cur\" \"$b\" || { git rebase --abort 2>/dev/null; git switch -q \"$cur\" 2>/dev/null; echo \"rebase-merge-nonmerged: SKIPPED $b (rebase onto $cur failed; merge it by hand: git merge --no-ff $b)\"; skipped=\"$skipped $b\"; continue; }; \
