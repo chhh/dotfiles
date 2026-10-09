@@ -195,8 +195,9 @@
 
 
   # List branches NOT merged into a base (default: the current branch), newest first, each with
-  # the date of its last commit. Local and remote together, or either one. The merge-*-nonmerged
-  # and rebase-merge-*-nonmerged aliases below are built on it and pass their options through.
+  # the date of its last commit. Local and remote together, or either one. This is the preview: the
+  # merge-nonmerged and rebase-merge-nonmerged actions below take the same options and act on exactly
+  # what this lists.
   #
   # Usage: git list-nonmerged [options] [base]
   #   --since DATE    only branches whose LAST commit is on or after DATE (inclusive)
@@ -249,151 +250,123 @@
         { print }'; \
   }; f"
 
-  # Merge every LOCAL branch not yet merged into the current one, one --no-ff merge commit each.
-  # Usage: git merge-local-nonmerged [--since DATE] [--before DATE]   (the options of list-nonmerged, passed on)
-  # The branches come from `git list-nonmerged --local ...` (newest commit first) and
-  # are merged in that order. Stops at the first conflict (non-zero exit), leaving that merge in
-  # progress and the earlier ones done. Resolve it and `git commit --no-edit` (or
-  # `git merge --abort`), then run it again: merged branches drop out of the list, so it carries on.
-  merge-local-nonmerged = "!f() { \
-    for b in $(git list-nonmerged --local \"$@\" | awk '{print $2}'); do \
-      echo \"merge-local-nonmerged: $b\"; \
+  # Internal, used by merge-nonmerged and rebase-merge-nonmerged: resolve which branches to act on and
+  # print them one per line. Either the branches `git list-nonmerged <opts>` lists, or, after
+  # --branches, the names you give (local feat/x, remote origin/x, or pasted from gitk
+  # remotes/origin/x; checked first, a typo is an error). --branches cannot be combined with
+  # list-nonmerged filters. A --push anywhere is ignored here (the callers handle it).
+  select-nonmerged = "!f() { \
+    names=; havebr=; n=$#; \
+    while [ $n -gt 0 ]; do \
+      a=$1; shift; n=$((n-1)); \
+      case $a in \
+        --push) ;; \
+        --branches) havebr=1; while [ $n -gt 0 ]; do [ \"$1\" = --push ] || names=\"$names $1\"; shift; n=$((n-1)); done;; \
+        *) set -- \"$@\" \"$a\";; \
+      esac; \
+    done; \
+    if [ -n \"$havebr\" ]; then \
+      [ $# -eq 0 ] || { echo \"--branches cannot be combined with: $*\" >&2; exit 2; }; \
+      [ -n \"$names\" ] || { echo '--branches needs at least one branch' >&2; exit 2; }; \
+      for a in $names; do \
+        r=\"${a#remotes/}\"; \
+        git show-ref --verify -q \"refs/heads/$r\" || git show-ref --verify -q \"refs/remotes/$r\" || { echo \"no such branch: $a\" >&2; exit 2; }; \
+        echo \"$r\"; \
+      done; \
+    else \
+      list=$(git list-nonmerged \"$@\") || { echo \"$list\" >&2; exit 2; }; \
+      printf '%s\\n' \"$list\" | awk 'NF { print $2 }'; \
+    fi; \
+  }; f"
+
+  # Merge branches into the current branch, one --no-ff merge commit each. The preview/action pair:
+  # `git list-nonmerged <opts>` is the preview, this is the action.
+  # Usage: git merge-nonmerged [--push] [list-nonmerged options] [base]
+  #        git merge-nonmerged [--push] --branches <branch>...
+  #   Takes exactly the options of list-nonmerged (--since, --before, -l, -r, --descendants,
+  #   --diverged, base): `git list-nonmerged <opts>` shows what `git merge-nonmerged <opts>` will merge.
+  #   --branches  merge the branches YOU NAME instead (everything after it): local, remote, or pasted
+  #               from gitk (remotes/origin/x). Cannot be combined with the filters.
+  #   --push      afterwards: `git push` the current branch (needs an upstream; if that fails nothing
+  #               else is pushed), then fast-forward each remote-tracking branch of the set to the
+  #               new tip (plain pushes, never forced; one someone moved meanwhile is rejected and
+  #               reported). Local branches are not pushed.
+  # Stops at the first conflict, leaving that merge in progress and the earlier ones done: resolve
+  # and `git commit --no-edit` (or `git merge --abort`), then rerun. A branch already in HEAD (e.g. a
+  # local branch and its remote copy, merged one after the other) is skipped.
+  # Overlapping lanes in gitk: for a clean ladder use rebase-merge-nonmerged.
+  merge-nonmerged = "!f() { \
+    push=; for a in \"$@\"; do [ \"$a\" != --push ] || push=1; done; \
+    git symbolic-ref -q HEAD >/dev/null || { echo 'merge-nonmerged: detached HEAD, switch to a branch'; exit 1; }; \
+    branches=$(git select-nonmerged \"$@\") || exit 1; \
+    [ -n \"$branches\" ] || { echo 'merge-nonmerged: nothing to merge'; exit 0; }; \
+    for b in $branches; do \
+      git merge-base --is-ancestor \"$b\" HEAD && { echo \"merge-nonmerged: skip $b (already in HEAD)\"; continue; }; \
+      echo \"merge-nonmerged: $b\"; \
       git merge --no-ff --no-edit \"$b\" || exit 1; \
     done; \
+    if [ -n \"$push\" ]; then \
+      git push || { echo 'merge-nonmerged: push of the current branch failed, remote branches left alone'; exit 1; }; \
+      failed=; \
+      for b in $branches; do \
+        git show-ref --verify -q \"refs/remotes/$b\" || continue; \
+        echo \"merge-nonmerged: fast-forward $b\"; \
+        git push -q \"${b%%/*}\" \"HEAD:refs/heads/${b#*/}\" || failed=\"$failed $b\"; \
+      done; \
+      [ -z \"$failed\" ] || { echo \"merge-nonmerged: could not fast-forward:$failed\"; exit 1; }; \
+    fi; \
   }; f"
 
-  # Same for REMOTE-tracking branches: merges origin/<name> etc. into the current branch.
-  # Usage: git merge-remote-nonmerged [--since DATE] [--before DATE]. Fetch first (git fa) for fresh results.
-  # Merge commits read "Merge remote-tracking branch 'origin/x'". Stops at the first conflict; to
-  # continue, same as merge-local-nonmerged. The remote branches are untouched, so once you push
-  # the current branch they count as merged and drop off the list.
-  merge-remote-nonmerged = "!f() { \
-    for b in $(git list-nonmerged --remote \"$@\" | awk '{print $2}'); do \
-      echo \"merge-remote-nonmerged: $b\"; \
-      git merge --no-ff --no-edit \"$b\" || exit 1; \
-    done; \
-  }; f"
-
-  # merge-remote-nonmerged, then fast-forward those remote branches to the new tip, so they end up
-  # level with the current branch. Usage: git merge-ff-remote-nonmerged [--since DATE] [--before DATE]
-  # Steps: remember the branches `git list-nonmerged --remote ...` gives, merge them
-  # all (stops on the first conflict: nothing is pushed, resolve and rerun), `git push` the
-  # current branch, then push its tip to each remote branch. The branch pushes are plain
-  # fast-forwards (the current branch now contains each of them), never forced: if someone moved
-  # one meanwhile, that push is rejected, reported, and the rest still go. Pushing the current
-  # branch first means a rejected push there stops everything before any other branch moves.
-  # Needs an upstream on the current branch. Every listed remote branch becomes a copy of the
-  # current branch, including the other branches' work: other people's branches are moved.
-  merge-ff-remote-nonmerged = "!f() { \
-    git symbolic-ref -q HEAD >/dev/null || { echo 'merge-ff-remote-nonmerged: detached HEAD, switch to a branch'; exit 1; }; \
-    branches=$(git list-nonmerged --remote \"$@\" | awk '{print $2}'); \
-    [ -n \"$branches\" ] || { echo 'merge-ff-remote-nonmerged: no non-merged remote branches'; exit 0; }; \
-    git merge-remote-nonmerged \"$@\" || exit 1; \
-    git push || { echo 'merge-ff-remote-nonmerged: push of the current branch failed, remote branches left alone'; exit 1; }; \
-    failed=; \
-    for r in $branches; do \
-      echo \"merge-ff-remote-nonmerged: fast-forward $r\"; \
-      git push -q \"${r%%/*}\" \"HEAD:refs/heads/${r#*/}\" || failed=\"$failed $r\"; \
-    done; \
-    [ -z \"$failed\" ] || { echo \"merge-ff-remote-nonmerged: could not fast-forward:$failed\"; exit 1; }; \
-  }; f"
-
-  # Rebase, then merge, every LOCAL branch not yet merged into the current one: each branch is
-  # first rebased onto the current branch, then merged with --no-ff, one branch at a time. Each
-  # rebase starts from the previous merge, so the history reads as a clean sequence of "branch,
-  # merge commit, branch, merge commit" with no criss-crossing.
-  # Usage: git rebase-merge-local-nonmerged [--since DATE] [--before DATE]. Refuses a detached HEAD or a dirty tree;
-  # stops on the first failure.
-  # REWRITES the rebased branches' commits: one already pushed needs a force-push after.
-  # If a rebase conflicts: resolve it, `git rebase --continue`, `git switch <the branch you were
-  # on>`, run it again: that branch is already on top, so it only merges, and the rest follow.
-  # To give up on it: `git rebase --abort`.
-  rebase-merge-local-nonmerged = "!f() { \
-    cur=$(git symbolic-ref --short -q HEAD) || { echo 'rebase-merge-local-nonmerged: detached HEAD, switch to a branch'; exit 1; }; \
-    git diff --quiet && git diff --cached --quiet || { echo 'rebase-merge-local-nonmerged: commit or stash first'; exit 1; }; \
-    for b in $(git list-nonmerged --local \"$@\" | awk '{print $2}'); do \
-      echo \"rebase-merge-local-nonmerged: $b onto $cur\"; \
-      git rebase \"$cur\" \"$b\" || { echo \"rebase of $b stopped: resolve, git rebase --continue, git switch $cur, rerun\"; exit 1; }; \
-      git switch -q \"$cur\" && git merge --no-ff --no-edit \"$b\" || { echo \"merge of $b failed\"; exit 1; }; \
-    done; \
-  }; f"
-
-  # Rebase, then merge, the remote branches YOU NAME, one at a time, in the order given.
-  # Usage: git rebase-merge-remote-branches [--push] <branch>...
-  #   git rebase-merge-remote-branches remotes/origin/feat/self-ion-scan remotes/origin/feat/plug-align
-  # Names may be pasted from gitk (remotes/origin/x) or written origin/x; all are checked first, so
-  # a typo stops the run before anything changes. Each branch is rebased onto the current branch,
-  # then merged with --no-ff ("Merge branch 'x' into <current>"), and the next rebase starts from
-  # that merge: a clean ladder of "branch, merge commit" in gitk, no criss-crossing.
-  # The catch with REMOTE branches: one cannot be rebased in place. Each is rebased as a detached
-  # copy and that copy is merged. The remote branch itself is NOT changed, so after you push, git
-  # still lists it as not merged (its commits differ from the rebased copy) until you force-push
-  # the rebased tips back to it. Rerunning skips branches whose changes are already in the current
-  # branch (`git cherry`), so it is safe to rerun. Refuses a detached HEAD or a dirty tree.
-  # It does NOT stop on a conflict: resuming would redo the same rebase from the unchanged remote
-  # branch. A conflicting rebase is aborted, that branch is skipped, the rest are processed, and the
-  # skipped ones are listed at the end (exit 1). Merge those by hand, resolving the conflict in the
-  # merge: git merge --no-ff origin/<name>
-  # --push: afterwards also push the rebased tips back, so the remote branches match what was merged
-  # and drop off `list-nonmerged`. First a plain `git push` of the current branch (needs an upstream;
-  # if it fails nothing else is pushed), then each rebased tip is FORCE-pushed to its remote branch
-  # with --force-with-lease pinned to the commit you rebased from: if someone pushed to that branch
-  # meanwhile, that one is rejected and reported and the rest still go. Branches skipped (conflict or
-  # already in the current branch) are not pushed. This REWRITES the remote branches.
-  rebase-merge-remote-branches = "!f() { \
-    push=; [ \"$1\" != --push ] || { push=1; shift; }; \
-    [ $# -gt 0 ] || { echo 'usage: git rebase-merge-remote-branches [--push] <remote-branch>...  (remotes/origin/x or origin/x)'; exit 1; }; \
-    cur=$(git symbolic-ref --short -q HEAD) || { echo 'rebase-merge-remote-branches: detached HEAD, switch to a branch'; exit 1; }; \
-    git diff --quiet && git diff --cached --quiet || { echo 'rebase-merge-remote-branches: commit or stash first'; exit 1; }; \
-    refs=; \
-    for a in \"$@\"; do \
-      r=\"${a#remotes/}\"; \
-      git rev-parse --verify -q \"refs/remotes/$r\" >/dev/null || { echo \"rebase-merge-remote-branches: no such remote branch: $a\"; exit 1; }; \
-      refs=\"$refs $r\"; \
-    done; \
+  # Rebase, then merge, branches: each is rebased onto the current branch, merged with --no-ff
+  # ("Merge branch 'x' into <current>"), and the next rebase starts from that merge, so gitk shows a
+  # clean ladder of "branch, merge commit" with no criss-crossing. Same selection as merge-nonmerged:
+  # Usage: git rebase-merge-nonmerged [--push] [list-nonmerged options] [base]
+  #        git rebase-merge-nonmerged [--push] --branches <branch>...
+  # `git list-nonmerged <opts>` previews exactly what this will process; --branches takes the names
+  # you give instead (local, remote, or pasted from gitk: remotes/origin/x; all are checked first, so
+  # a typo stops the run before anything changes). Local and remote branches can be mixed.
+  # A LOCAL branch is rebased in place. A REMOTE one cannot be: it is rebased as a detached copy and
+  # that copy is merged, the remote branch itself is untouched, so it stays "not merged" in
+  # list-nonmerged until it is pushed back (--push). Rebasing REWRITES the commits of local branches
+  # you already pushed. Refuses a detached HEAD or a dirty tree. Rerunning skips branches whose
+  # changes are already in the current branch (`git cherry`), so it is safe to rerun.
+  # It does NOT stop on a conflict: a conflicting rebase is aborted, that branch is skipped, the rest
+  # are processed, and the skipped ones are listed at the end (exit 1). Merge those by hand,
+  # resolving the conflict in the merge: git merge --no-ff <branch>. (A branch checked out in another
+  # worktree cannot be rebased and is skipped the same way.)
+  #   --branches  the branches YOU NAME instead of a list (everything after it); no filters with it
+  #   --push      afterwards: `git push` the current branch first (needs an upstream; if that fails
+  #               nothing else is pushed), then each rebased REMOTE branch's tip is FORCE-pushed to
+  #               it with --force-with-lease pinned to the commit you rebased from: if someone
+  #               pushed to it meanwhile, that one is rejected and reported and the rest still go.
+  #               Skipped branches and local branches are not pushed. REWRITES those remote branches.
+  rebase-merge-nonmerged = "!f() { \
+    push=; for a in \"$@\"; do [ \"$a\" != --push ] || push=1; done; \
+    cur=$(git symbolic-ref --short -q HEAD) || { echo 'rebase-merge-nonmerged: detached HEAD, switch to a branch'; exit 1; }; \
+    git diff --quiet && git diff --cached --quiet || { echo 'rebase-merge-nonmerged: commit or stash first'; exit 1; }; \
+    refs=$(git select-nonmerged \"$@\") || exit 1; \
+    [ -n \"$refs\" ] || { echo 'rebase-merge-nonmerged: nothing to merge'; exit 0; }; \
     skipped=; failed=; pairs=; \
     for b in $refs; do \
-      git cherry \"$cur\" \"$b\" | grep -q '^+' || { echo \"rebase-merge-remote-branches: skip $b (already in $cur)\"; continue; }; \
-      echo \"rebase-merge-remote-branches: $b onto $cur\"; \
-      old=$(git rev-parse \"refs/remotes/$b\"); \
-      git rebase \"$cur\" \"$b\" || { git rebase --abort; echo \"rebase-merge-remote-branches: SKIPPED $b (conflicts with $cur; merge it by hand: git merge --no-ff $b)\"; skipped=\"$skipped $b\"; continue; }; \
+      if git show-ref --verify -q \"refs/heads/$b\"; then full=refs/heads/$b; name=$b; else full=refs/remotes/$b; name=${b#*/}; fi; \
+      git cherry \"$cur\" \"$full\" | grep -q '^+' || { echo \"rebase-merge-nonmerged: skip $b (already in $cur)\"; continue; }; \
+      echo \"rebase-merge-nonmerged: $b onto $cur\"; \
+      old=$(git rev-parse \"$full\"); \
+      git rebase \"$cur\" \"$b\" || { git rebase --abort 2>/dev/null; git switch -q \"$cur\" 2>/dev/null; echo \"rebase-merge-nonmerged: SKIPPED $b (rebase onto $cur failed; merge it by hand: git merge --no-ff $b)\"; skipped=\"$skipped $b\"; continue; }; \
       tip=$(git rev-parse HEAD); \
-      git switch -q \"$cur\" && git merge --no-ff --no-edit -m \"Merge branch '${b#*/}' into $cur\" \"$tip\" || { echo \"merge of $b failed\"; exit 1; }; \
-      pairs=\"$pairs $b:$tip:$old\"; \
+      git switch -q \"$cur\" && git merge --no-ff --no-edit -m \"Merge branch '$name' into $cur\" \"$tip\" || { echo \"merge of $b failed\"; exit 1; }; \
+      case $full in refs/remotes/*) pairs=\"$pairs $b:$tip:$old\";; esac; \
     done; \
     if [ -n \"$push\" ] && [ -n \"$pairs\" ]; then \
-      git push || { echo 'rebase-merge-remote-branches: push of the current branch failed, remote branches left alone'; exit 1; }; \
+      git push || { echo 'rebase-merge-nonmerged: push of the current branch failed, remote branches left alone'; exit 1; }; \
       for p in $pairs; do \
         b=${p%%:*}; rest=${p#*:}; tip=${rest%%:*}; old=${rest#*:}; \
-        echo \"rebase-merge-remote-branches: force-push $b\"; \
+        echo \"rebase-merge-nonmerged: force-push $b\"; \
         git push -q --force-with-lease=\"refs/heads/${b#*/}:$old\" \"${b%%/*}\" \"$tip:refs/heads/${b#*/}\" || failed=\"$failed $b\"; \
       done; \
     fi; \
-    [ -z \"$failed\" ] || echo \"rebase-merge-remote-branches: could not force-push (changed on the remote?):$failed\"; \
-    [ -z \"$skipped$failed\" ] || { [ -z \"$skipped\" ] || echo \"rebase-merge-remote-branches: skipped (conflicts):$skipped\"; exit 1; }; \
-  }; f"
-
-  # Same, for every remote branch `git list-nonmerged --remote ...` lists (see
-  # rebase-merge-remote-branches above for how it works and its catch).
-  # Usage: git rebase-merge-remote-nonmerged [--since DATE] [--before DATE]
-  rebase-merge-remote-nonmerged = "!f() { \
-    branches=$(git list-nonmerged --remote \"$@\" | awk '{print $2}'); \
-    [ -n \"$branches\" ] || { echo 'rebase-merge-remote-nonmerged: no non-merged remote branches'; exit 0; }; \
-    git rebase-merge-remote-branches $branches; \
-  }; f"
-
-  # rebase-merge-remote-nonmerged, then force-push each rebased tip back to its remote branch (the
-  # "force" is in the name because it rewrites other branches). Same as
-  # `git rebase-merge-remote-branches --push <the branches git list-nonmerged --remote lists>`:
-  # see there for the exact steps, the lease and what is skipped. Afterwards each remote branch holds
-  # just its own rebased commits, is an ancestor of the current branch, and drops off list-nonmerged.
-  # Needs an upstream on the current branch. Usage: git rebase-merge-force-remote-nonmerged
-  # [--since DATE] [--before DATE]. For branches you pick by name, call
-  # `git rebase-merge-remote-branches --push <names>` directly.
-  rebase-merge-force-remote-nonmerged = "!f() { \
-    branches=$(git list-nonmerged --remote \"$@\" | awk '{print $2}'); \
-    [ -n \"$branches\" ] || { echo 'rebase-merge-force-remote-nonmerged: no non-merged remote branches'; exit 0; }; \
-    git rebase-merge-remote-branches --push $branches; \
+    [ -z \"$failed\" ] || echo \"rebase-merge-nonmerged: could not force-push (changed on the remote?):$failed\"; \
+    [ -z \"$skipped$failed\" ] || { [ -z \"$skipped\" ] || echo \"rebase-merge-nonmerged: skipped:$skipped\"; exit 1; }; \
   }; f"
 
   # detach, delete given local branch, checkout fresh remote-tracking
