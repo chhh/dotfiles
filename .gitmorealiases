@@ -205,6 +205,9 @@
   #                   Both together select a range [since, before). DATE is YYYY-MM-DD; a prefix
   #                   like 2026-10 works: --since 2026-10 = from Oct 1, --before 2026-10 = up to
   #                   the end of September. `git merged` takes the same two options.
+  #   --from REV      only branches that CONTAIN the commit REV (it is in their history), e.g. a
+  #                   sync point. Independent of the base: with the default base HEAD it lists
+  #                   what is built on REV and not yet in HEAD. Not with --descendants.
   #   -e, --exclude RE  leave out branches whose name matches the extended regex RE; repeatable.
   #                   Matched against the name as listed (origin/feat/x for a remote branch,
   #                   unanchored: -e 'wip|^origin/old/' ). merge-nonmerged and
@@ -231,7 +234,7 @@
   #   git list-nonmerged --descendants                        # strictly ahead of HEAD: fast-forwardable
   #   git list-nonmerged -r --diverged --since 2026-10        # remote ones that need a real merge
   list-nonmerged = "!f() { \
-    since=; before=; scope='refs/heads refs/remotes'; base=HEAD; rel=; exre=; \
+    since=; before=; scope='refs/heads refs/remotes'; base=HEAD; rel=; exre=; from=; \
     while [ $# -gt 0 ]; do \
       case $1 in \
         --since|--before) \
@@ -240,6 +243,9 @@
         -e|--exclude) \
           [ $# -ge 2 ] || { echo \"list-nonmerged: $1 needs a value\"; exit 2; }; \
           exre=\"${exre:+$exre|}($2)\"; shift;; \
+        --from) \
+          [ $# -ge 2 ] || { echo \"list-nonmerged: $1 needs a value\"; exit 2; }; \
+          from=$2; shift;; \
         -l|--local) scope=refs/heads;; \
         -r|--remote) scope=refs/remotes;; \
         --descendants) rel=--contains;; \
@@ -250,6 +256,11 @@
     done; \
     git rev-parse --verify -q \"$base^{commit}\" >/dev/null || { echo \"list-nonmerged: unknown base: $base (dates go in --since / --before)\"; exit 2; }; \
     relarg=; [ -z \"$rel\" ] || relarg=\"$rel=$base\"; \
+    if [ -n \"$from\" ]; then \
+      [ \"$rel\" != --contains ] || { echo 'list-nonmerged: --from and --descendants cannot be combined'; exit 2; }; \
+      git rev-parse --verify -q \"$from^{commit}\" >/dev/null || { echo \"list-nonmerged: unknown --from: $from\"; exit 2; }; \
+      relarg=\"$relarg --contains=$from\"; \
+    fi; \
     git for-each-ref --no-merged=\"$base\" $relarg --sort=-committerdate --format='%(committerdate:short) %(refname:short)' $scope \
       | EX=\"$(git remote | tr '\\n' ' ')\" SINCE=\"$since\" BEFORE=\"$before\" EXRE=\"$exre\" awk 'BEGIN { n = split(ENVIRON[\"EX\"], a, \" \"); for (i = 1; i <= n; i++) x[a[i]] = 1; since = ENVIRON[\"SINCE\"]; before = ENVIRON[\"BEFORE\"]; exre = ENVIRON[\"EXRE\"] } \
         $2 in x || $2 ~ /HEAD$/ { next } \
@@ -376,6 +387,27 @@
     fi; \
     [ -z \"$failed\" ] || echo \"rebase-merge-nonmerged: could not force-push (changed on the remote?):$failed\"; \
     [ -z \"$skipped$failed\" ] || { [ -z \"$skipped\" ] || echo \"rebase-merge-nonmerged: skipped:$skipped\"; exit 1; }; \
+  }; f"
+
+  # Point remote branches at a target: a synchronization point. Plain (non-force) push of TARGET to
+  # every remote branch that `git list-nonmerged <opts>` lists, so each fast-forwards to it. A branch
+  # that cannot fast-forward (its tip is not an ancestor of TARGET) is rejected and reported, the
+  # rest still go. Remote branches only (-r is added); each is pushed to its own remote. TARGET
+  # itself is skipped. Nothing local changes. Preview first: git list-nonmerged <opts> -r
+  # Usage: git sync-nonmerged TARGET [list-nonmerged options] [base]
+  # Example: git sync-nonmerged origin/dev --descendants -e dev feat/annot-load-to-view
+  sync-nonmerged = "!f() { \
+    [ $# -ge 1 ] || { echo 'usage: git sync-nonmerged TARGET [list-nonmerged options] [base]'; exit 2; }; \
+    t=$1; shift; \
+    sha=$(git rev-parse --verify -q \"$t^{commit}\") || { echo \"sync-nonmerged: unknown target: $t\"; exit 2; }; \
+    list=$(git list-nonmerged \"$@\" -r) || { echo \"$list\"; exit 2; }; \
+    failed=; \
+    for b in $(printf '%s\\n' \"$list\" | awk 'NF { print $2 }'); do \
+      [ \"$b\" != \"$t\" ] || continue; \
+      echo \"sync-nonmerged: $b <- $t\"; \
+      git push -q \"${b%%/*}\" \"$sha:refs/heads/${b#*/}\" || failed=\"$failed $b\"; \
+    done; \
+    [ -z \"$failed\" ] || { echo \"sync-nonmerged: not pushed (cannot fast-forward?):$failed\"; exit 1; }; \
   }; f"
 
   # detach, delete given local branch, checkout fresh remote-tracking
