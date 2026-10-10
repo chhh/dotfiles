@@ -421,6 +421,197 @@
     [ -z \"$failed\" ] || { echo \"sync-nonmerged: not pushed (cannot fast-forward?):$failed\"; exit 1; }; \
   }; f"
 
+  # ---- list-branches | merge-branches | ff-branches: select, then act -----------------------------
+  # list-branches only SELECTS branches (the current branch plays no part) and prints one name per
+  # line, so it pipes into the actions; run it alone first to preview what an action will get.
+  #   git list-branches <filters> | git merge-branches [--into BR] [mode] [--push] [-n]
+  #   git list-branches <filters> | git ff-branches --to REV [-n]
+  # Three ancestry filters on a branch's TIP, all optional and combinable:
+  #   --from REV     the branch CONTAINS the commit REV (it is built on REV)
+  #   --to REV       the tip is IN REV (already merged into REV)
+  #   --not-in REV   the tip is NOT in REV (not yet merged into it)
+  # Other filters: --since DATE (inclusive) / --before DATE (exclusive) on the last commit date
+  # (YYYY-MM-DD, a prefix like 2026-10 works); -l local only, -r remote only (default both);
+  # -e/--exclude RE leave out names matching the extended regex RE (repeatable; remote names are
+  # origin/x). Output: -d adds the date, --reverse puts oldest first. <remote>/HEAD is never listed.
+  # No bare arguments: everything is an option.
+  # Examples:
+  #   git list-branches --from 058cbc -r                    # remote branches built on 058cbc
+  #   git list-branches --from 058cbc --not-in origin/dev   # ...not yet merged into origin/dev
+  #   git list-branches --to origin/dev -e '(^|/)main$'     # already merged into origin/dev
+  list-branches = "!f() { \n\
+    from=; to=; notin=; since=; before=; scope='refs/heads refs/remotes'; exre=; dates=; sort=-committerdate\n\
+    while [ $# -gt 0 ]; do\n\
+      case $1 in\n\
+        --from|--to|--not-in|--since|--before|-e|--exclude)\n\
+          [ $# -ge 2 ] || { echo \"list-branches: $1 needs a value\" >&2; exit 2; }\n\
+          case $1 in\n\
+            --from) from=$2;;\n\
+            --to) to=$2;;\n\
+            --not-in) notin=$2;;\n\
+            --since) since=$2;;\n\
+            --before) before=$2;;\n\
+            *) exre=\"${exre:+$exre|}($2)\";;\n\
+          esac; shift;;\n\
+        -l|--local) scope=refs/heads;;\n\
+        -r|--remote) scope=refs/remotes;;\n\
+        -d|--dates) dates=1;;\n\
+        --reverse) sort=committerdate;;\n\
+        -*) echo \"list-branches: unknown option $1\" >&2; exit 2;;\n\
+        *) echo \"list-branches: unexpected argument $1 (everything is an option: --from --to --not-in --since --before -e -l -r)\" >&2; exit 2;;\n\
+      esac; shift\n\
+    done\n\
+    chk() { git rev-parse --verify -q \"$2^{commit}\" >/dev/null || { echo \"list-branches: unknown $1: $2\" >&2; exit 2; }; }\n\
+    set --\n\
+    [ -z \"$from\" ] || { chk --from \"$from\"; set -- \"$@\" --contains=\"$from\"; }\n\
+    [ -z \"$to\" ] || { chk --to \"$to\"; set -- \"$@\" --merged=\"$to\"; }\n\
+    [ -z \"$notin\" ] || { chk --not-in \"$notin\"; set -- \"$@\" --no-merged=\"$notin\"; }\n\
+    git for-each-ref \"$@\" --sort=$sort --format='%(committerdate:short) %(refname:short)' $scope | EX=\"$(git remote | tr '\\n' ' ')\" SINCE=\"$since\" BEFORE=\"$before\" EXRE=\"$exre\" DATES=\"$dates\" awk 'BEGIN { n = split(ENVIRON[\"EX\"], a, \" \"); for (i = 1; i <= n; i++) x[a[i]] = 1; since = ENVIRON[\"SINCE\"]; before = ENVIRON[\"BEFORE\"]; exre = ENVIRON[\"EXRE\"]; dates = ENVIRON[\"DATES\"] }\n\
+      $2 in x || $2 ~ /HEAD$/ { next }\n\
+      length(exre) && $2 ~ exre { next }\n\
+      length(since) && $1 < since { next }\n\
+      length(before) && $1 >= before { next }\n\
+      { if (length(dates)) print $1, $2; else print $2 }'\n\
+  }; f"
+
+  # merge-branches: read branch names on stdin (or --branches <names>... as the last option) and
+  # merge them one at a time into the current branch, or into --into BR (a local branch, checked
+  # out for the run, then you are switched back). Names from gitk (remotes/origin/x) are accepted.
+  # Modes: default = rebase each branch onto the target, then a --no-ff merge ("Merge branch 'x' into
+  # BR"): a clean ladder in gitk. --no-rebase = plain --no-ff merge, stops at the first conflict.
+  # --ff-only = fast-forward only; a branch that is not one is reported and skipped. A conflicting
+  # rebase is aborted and the branch skipped and listed at the end (exit 1). A branch already in
+  # the target is skipped (in rebase mode: when `git cherry` finds all its commits already there).
+  # --into origin/dev (a remote branch) works only with --ff-only: it pushes each fast-forward.
+  # --push afterwards pushes the target branch and, in rebase mode, force-pushes the rebased REMOTE
+  # branches (--force-with-lease pinned to the commit rebased from); local branches are not pushed.
+  # -n/--dry-run only prints what would be done. Needs a clean tree for a local target.
+  #   git list-branches --from 058cbc --not-in dev | git merge-branches --push
+  merge-branches = "!f() { \n\
+    me=merge-branches; mode=rebase; into=; push=; dry=; havebr=; names=\n\
+    while [ $# -gt 0 ]; do\n\
+      case $1 in\n\
+        --into) [ $# -ge 2 ] || { echo \"$me: --into needs a value\" >&2; exit 2; }; into=$2; shift;;\n\
+        --no-rebase) mode=merge;;\n\
+        --ff-only) mode=ff;;\n\
+        --push) push=1;;\n\
+        -n|--dry-run) dry=1;;\n\
+        --branches) havebr=1; shift; names=\"$*\"; break;;\n\
+        *) echo \"$me: unknown argument $1 (branches come from stdin or --branches)\" >&2; exit 2;;\n\
+      esac; shift\n\
+    done\n\
+    cur=$(git symbolic-ref --short -q HEAD) || cur=\n\
+    tgt=${into:-$cur}\n\
+    [ -n \"$tgt\" ] || { echo \"$me: detached HEAD, use --into <branch>\" >&2; exit 1; }\n\
+    if [ -n \"$havebr\" ]; then raw=$names; else\n\
+      if [ -t 0 ]; then echo \"$me: no branches given: pipe git list-branches into it, or use --branches <names>\" >&2; exit 2; fi\n\
+      raw=$(awk 'NF { print $NF }')\n\
+    fi\n\
+    refs=\n\
+    for a in $raw; do\n\
+      r=${a#remotes/}\n\
+      git show-ref --verify -q \"refs/heads/$r\" || git show-ref --verify -q \"refs/remotes/$r\" || { echo \"$me: no such branch: $a\" >&2; exit 2; }\n\
+      refs=\"$refs $r\"\n\
+    done\n\
+    [ -n \"$refs\" ] || { echo \"$me: nothing to do\"; exit 0; }\n\
+    if git show-ref --verify -q \"refs/heads/$tgt\"; then rt=\n\
+    elif git show-ref --verify -q \"refs/remotes/$tgt\"; then rt=1\n\
+    else echo \"$me: unknown --into: $tgt\" >&2; exit 2; fi\n\
+    failed=; skipped=\n\
+    if [ -n \"$rt\" ]; then\n\
+      [ \"$mode\" = ff ] || { echo \"$me: --into a remote branch works only with --ff-only (it is a push); merge into a local branch and push\" >&2; exit 2; }\n\
+      for b in $refs; do\n\
+        [ \"$b\" != \"$tgt\" ] || continue\n\
+        if git show-ref --verify -q \"refs/heads/$b\"; then tip=$(git rev-parse \"refs/heads/$b\"); else tip=$(git rev-parse \"refs/remotes/$b\"); fi\n\
+        git merge-base --is-ancestor \"$tip\" \"$tgt\" && { echo \"$me: skip $b (already in $tgt)\"; continue; }\n\
+        git merge-base --is-ancestor \"$tgt\" \"$tip\" || { echo \"$me: skip $b (not a fast-forward of $tgt)\"; skipped=\"$skipped $b\"; continue; }\n\
+        if [ -n \"$dry\" ]; then echo \"$me: would push $b to $tgt\"; continue; fi\n\
+        echo \"$me: $b -> $tgt\"\n\
+        git push -q \"${tgt%%/*}\" \"$tip:refs/heads/${tgt#*/}\" || { failed=\"$failed $b\"; break; }\n\
+      done\n\
+      [ -z \"$failed\" ] || { echo \"$me: push failed:$failed\" >&2; exit 1; }\n\
+      [ -z \"$skipped\" ] || { echo \"$me: skipped (not fast-forwards):$skipped\"; exit 1; }\n\
+      exit 0\n\
+    fi\n\
+    git diff --quiet && git diff --cached --quiet || { echo \"$me: commit or stash first\" >&2; exit 1; }\n\
+    back=; if [ \"$tgt\" != \"$cur\" ]; then back=$cur; git switch -q \"$tgt\" || exit 1; fi\n\
+    pairs=\n\
+    for b in $refs; do\n\
+      [ \"$b\" != \"$tgt\" ] || continue\n\
+      if git show-ref --verify -q \"refs/heads/$b\"; then full=refs/heads/$b; name=$b; else full=refs/remotes/$b; name=${b#*/}; fi\n\
+      if [ \"$mode\" = rebase ]; then\n\
+        git cherry \"$tgt\" \"$full\" | grep -q '^+' || { echo \"$me: skip $b (its commits already exist in $tgt, safe to delete this branch)\"; continue; }\n\
+      else\n\
+        git merge-base --is-ancestor \"$b\" HEAD && { echo \"$me: skip $b (already in $tgt)\"; continue; }\n\
+      fi\n\
+      if [ -n \"$dry\" ]; then echo \"$me: would $mode $b into $tgt\"; continue; fi\n\
+      echo \"$me: $mode $b into $tgt\"\n\
+      case $mode in\n\
+        ff) git merge --ff-only \"$b\" || { echo \"$me: $b is not a fast-forward of $tgt\"; failed=\"$failed $b\"; };;\n\
+        merge) git merge --no-ff --no-edit \"$b\" || exit 1;;\n\
+        rebase)\n\
+          old=$(git rev-parse \"$full\")\n\
+          git rebase \"$tgt\" \"$b\" || { git rebase --abort 2>/dev/null; git switch -q \"$tgt\" 2>/dev/null; echo \"$me: SKIPPED $b (rebase onto $tgt failed; merge it by hand: git merge --no-ff $b)\"; skipped=\"$skipped $b\"; continue; }\n\
+          tip=$(git rev-parse HEAD)\n\
+          git switch -q \"$tgt\" && git merge --no-ff --no-edit -m \"Merge branch '$name' into $tgt\" \"$tip\" || { echo \"$me: merge of $b failed\" >&2; exit 1; }\n\
+          case $full in refs/remotes/*) pairs=\"$pairs $b:$tip:$old\";; esac;;\n\
+      esac\n\
+    done\n\
+    if [ -n \"$push\" ] && [ -z \"$dry\" ]; then\n\
+      git push || { echo \"$me: push of $tgt failed, nothing else pushed\" >&2; exit 1; }\n\
+      for p in $pairs; do\n\
+        b=${p%%:*}; rest=${p#*:}; tip=${rest%%:*}; old=${rest#*:}\n\
+        echo \"$me: force-push $b\"\n\
+        git push -q --force-with-lease=\"refs/heads/${b#*/}:$old\" \"${b%%/*}\" \"$tip:refs/heads/${b#*/}\" || failed=\"$failed $b\"\n\
+      done\n\
+    fi\n\
+    [ -z \"$back\" ] || git switch -q \"$back\"\n\
+    [ -z \"$failed\" ] || echo \"$me: failed:$failed\"\n\
+    [ -z \"$skipped$failed\" ] || { [ -z \"$skipped\" ] || echo \"$me: skipped:$skipped\"; exit 1; }\n\
+  }; f"
+
+  # ff-branches --to REV: move each listed branch UP to REV, only when the branch is behind REV
+  # (its tip is an ancestor of REV); others are skipped with a note. Remote branches get a plain
+  # (never forced) push, local ones are fast-forwarded in place (not the checked-out one). REV
+  # itself does not move. The opposite direction of merge-branches --ff-only, which moves the target.
+  #   git list-branches --from 058cbc --to origin/dev -e '(^|/)(main|dev)$' | git ff-branches --to origin/dev
+  ff-branches = "!f() { \n\
+    me=ff-branches; to=; dry=; havebr=; names=\n\
+    while [ $# -gt 0 ]; do\n\
+      case $1 in\n\
+        --to) [ $# -ge 2 ] || { echo \"$me: --to needs a value\" >&2; exit 2; }; to=$2; shift;;\n\
+        -n|--dry-run) dry=1;;\n\
+        --branches) havebr=1; shift; names=\"$*\"; break;;\n\
+        *) echo \"$me: unknown argument $1 (branches come from stdin or --branches)\" >&2; exit 2;;\n\
+      esac; shift\n\
+    done\n\
+    [ -n \"$to\" ] || { echo \"usage: git list-branches ... | git ff-branches --to REV [-n]\" >&2; exit 2; }\n\
+    sha=$(git rev-parse --verify -q \"$to^{commit}\") || { echo \"$me: unknown --to: $to\" >&2; exit 2; }\n\
+    if [ -n \"$havebr\" ]; then raw=$names; else\n\
+      if [ -t 0 ]; then echo \"$me: no branches given: pipe git list-branches into it, or use --branches <names>\" >&2; exit 2; fi\n\
+      raw=$(awk 'NF { print $NF }')\n\
+    fi\n\
+    refs=\n\
+    for a in $raw; do\n\
+      r=${a#remotes/}\n\
+      git show-ref --verify -q \"refs/heads/$r\" || git show-ref --verify -q \"refs/remotes/$r\" || { echo \"$me: no such branch: $a\" >&2; exit 2; }\n\
+      refs=\"$refs $r\"\n\
+    done\n\
+    [ -n \"$refs\" ] || { echo \"$me: nothing to do\"; exit 0; }\n\
+    failed=\n\
+    for b in $refs; do\n\
+      [ \"$b\" != \"$to\" ] || continue\n\
+      if git show-ref --verify -q \"refs/heads/$b\"; then loc=1; tip=$(git rev-parse \"refs/heads/$b\"); else loc=; tip=$(git rev-parse \"refs/remotes/$b\"); fi\n\
+      [ \"$tip\" != \"$sha\" ] || { echo \"$me: skip $b (already at $to)\"; continue; }\n\
+      git merge-base --is-ancestor \"$tip\" \"$sha\" || { echo \"$me: skip $b (not behind $to: it has commits $to lacks)\"; continue; }\n\
+      if [ -n \"$dry\" ]; then echo \"$me: would move $b to $to\"; continue; fi\n\
+      echo \"$me: $b -> $to\"\n\
+      if [ -n \"$loc\" ]; then git fetch -q . \"$sha:refs/heads/$b\" || failed=\"$failed $b\"\n\
+      else git push -q \"${b%%/*}\" \"$sha:refs/heads/${b#*/}\" || failed=\"$failed $b\"; fi\n\
+    done\n\
+    [ -z \"$failed\" ] || { echo \"$me: could not move:$failed\" >&2; exit 1; }\n\
+  }; f"
+
   # detach, delete given local branch, checkout fresh remote-tracking
   rebranch = "!f() { \
     BRANCH=${1}; \
