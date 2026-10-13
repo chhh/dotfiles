@@ -197,3 +197,32 @@ vim.keymap.set('n', '<leader>rr', '<cmd>make run<cr>',  { desc = 'cargo run' })
 vim.keymap.set('n', '<leader>rt', '<cmd>make test<cr>', { desc = 'cargo test' })
 vim.keymap.set('n', '<leader>rc', '<cmd>make clippy --message-format=short<cr>', { desc = 'cargo clippy' })
 vim.keymap.set('n', '<leader>rk', '<cmd>make check --message-format=short<cr>',  { desc = 'cargo check' })
+
+-- ---- papa archive: cp1251 / koi8-r text + tab-aligned ASCII art ---------
+-- Files recovered from Dad's old Windows HDD (~/papa-hdd, ~/papa-project) are
+-- cp1251 (some koi8-r, a few UTF-16LE-with-BOM). nvim's default fileencodings
+-- ends in latin1, so Cyrillic source shows up as "Íà ýòîì êîìïå".
+-- 'fileencodings' is a global-only option, so it is set here rather than per-buffer.
+-- Side effect: any later file that is NOT valid UTF-8 gets cp1251 guessed before
+-- latin1. That only changes the look of files that were already mojibake under
+-- latin1, and real source files are UTF-8, so the blast radius is small.
+-- Autocmd patterns are matched against the whole path, so '*' crosses '/'.
+vim.api.nvim_create_autocmd('BufReadPre', {
+  pattern = {
+    os.getenv('HOME') .. '/papa-project/*',
+    os.getenv('HOME') .. '/papa-hdd/*.txt',
+    os.getenv('HOME') .. '/papa-hdd/*.md',
+    os.getenv('HOME') .. '/papa-hdd/*.log',
+    os.getenv('HOME') .. '/papa-hdd/*.csv',
+    os.getenv('HOME') .. '/papa-hdd/*.sql',
+    os.getenv('HOME') .. '/papa-hdd/*.cpp',
+    os.getenv('HOME') .. '/papa-hdd/*.h',
+  },
+  callback = function()
+    vim.o.fileencodings = 'ucs-bom,utf-8,cp1251,koi8-r,latin1'
+    -- his box-drawing/column layouts only line up at tabstop 8
+    vim.bo.tabstop, vim.bo.softtabstop, vim.bo.shiftwidth = 8, 8, 8
+    vim.bo.expandtab = false
+    vim.wo.wrap = false
+  end,
+})
