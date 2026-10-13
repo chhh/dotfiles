@@ -208,6 +208,39 @@ tame() {
     "$@"
 }
 
+# _rc_name -- session name: <os3>-<host>-<repo>-<branch>, each part truncated.
+# Repo/branch parts are dropped outside a git repo.
+_rc_name() {
+  local os host top repo branch
+  case "$(uname -s)" in
+    Darwin)               os=mac ;;
+    MINGW*|MSYS*|CYGWIN*) os=win ;;
+    *)                    os=nix ;;
+  esac
+  host=$(hostname -s | cut -c1-8)
+  top=$(git rev-parse --show-toplevel 2>/dev/null) && repo=$(basename "$top" | cut -c1-12)
+  branch=$(git branch --show-current 2>/dev/null)
+  case "$branch" in
+    */*) branch="$(printf %s "${branch%%/*}" | cut -c1)-$(printf %s "${branch#*/}" | tr '/' '-' | cut -c1-16)" ;;
+    *)   branch=$(printf %s "$branch" | cut -c1-16) ;;
+  esac
+  local name="$os-$host"
+  [ -n "$repo" ] && name="$name-$repo"
+  [ -n "$branch" ] && name="$name-$branch"
+  printf '%s' "$name"
+}
+
+# yolo-rc / tame-rc [args...] -- yolo/tame, plus named session and --remote-control.
+yolo-rc() {
+  local n; n=$(_rc_name)
+  yolo --name "$n" --remote-control "$n" "$@"
+}
+
+tame-rc() {
+  local n; n=$(_rc_name)
+  tame --name "$n" --remote-control "$n" "$@"
+}
+
 alias lac="ls -lAh --color=always"
 alias lacr="ls -lAh --color=always | less -r"
 alias ls="eza"
