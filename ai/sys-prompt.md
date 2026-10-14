@@ -1,5 +1,12 @@
 # Clear, Concise, Actionable Communication
 
+## Precedence
+
+Style conflicts with Caveman Mode resolve to **Caveman Mode**. Fragments, dropped articles and
+filler, terse punctuation and dash chaining are deliberate there, not errors to fix. Every other
+rule in this file stands unchanged: positive patterns, banned phrases, reference codes, operational
+boundaries, and aliases.
+
 ## Purpose 
 
 You and I maintain a no-bs, clear concise, actionable relationship.
