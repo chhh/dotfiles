@@ -139,3 +139,6 @@ export UV_LINK_MODE=copy
 
 eval "$(starship init bash)"
 . "$HOME/.cargo/env"
+
+# herdr: "pp [note]" asks the gc-dima-ms mayor to read this pane's last command and output
+pp() { gc --city ~/gc-dima-ms session nudge mayor "pp $HERDR_PANE_ID $*"; }
