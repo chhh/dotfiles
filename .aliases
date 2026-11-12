@@ -381,7 +381,6 @@ tame() {
     "$@"
 }
 
-<<<<<<< Updated upstream
 # _rc_name -- session name: <os3>-<host>-<repo>-<branch>, each part truncated.
 # Repo/branch parts are dropped outside a git repo.
 _rc_name() {
@@ -415,14 +414,6 @@ tame-rc() {
   tame --name "$n" --remote-control "$n" "$@"
 }
 
-alias lac="ls -lAh --color=always"
-alias lacr="ls -lAh --color=always | less -r"
-alias ls="eza"
-alias ll="eza -ll --color=always"
-alias la="eza -lA --color=always"
-alias l="eza -ll --color=always | less -R"
-=======
->>>>>>> Stashed changes
 
 # ==============================================================================
 # 7. GIT
