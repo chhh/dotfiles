@@ -1,6 +1,149 @@
-#alias cdfc="cd /c/dmt.avt/source/bb-flight-control/"
-#alias cdmsio="cd /c/dmt.avt/source/bertis-msio/"
+# ==============================================================================
+# ~/.aliases
+#
+# Sections
+#   1. Shell & tool defaults
+#   2. File listing (eza)
+#   3. Generic shell helpers
+#   4. Fuzzy search (rg + fzf)
+#   5. tmux
+#   6. Claude Code
+#   7. Git
+#   8. NAS (Synology git host)
+#   9. Enveda
+#
+# Doc block format used below
+#   # name -- one-line summary
+#   #   Usage: how to call it
+#   #   Notes: behavior worth knowing
+# ==============================================================================
 
+
+# ==============================================================================
+# 1. SHELL & TOOL DEFAULTS
+# ==============================================================================
+
+# LESS -- default options for `less`
+#   Notes: -R passes ANSI colors through, so colored output stays colored.
+export LESS='-R'
+
+# rgl -- ripgrep with color forced on
+#   Usage: rgl PATTERN [PATH...] | less
+#   Notes: --color=always keeps colors when piping into a pager.
+alias rgl='rg --color=always'
+
+# fd -- fd-find under its expected name (Debian/Ubuntu only)
+#   Notes: Debian/Ubuntu ship the fd-find binary as `fdfind` because `fd` clashes
+#          with the mikmod package. Alias is only set when `fdfind` exists.
+command -v fdfind >/dev/null 2>&1 && alias fd='fdfind'
+
+
+# ==============================================================================
+# 2. FILE LISTING (eza)
+# ==============================================================================
+
+# ls -- eza instead of coreutils ls
+#   Notes: Also applies to the aliases below that start with `ls` (lac, lacr),
+#          because alias expansion is recursive.
+alias ls="eza"
+
+# lac -- long listing, all entries, human sizes, forced color
+#   Usage: lac [PATH...]
+alias lac="ls -lAh --color=always"
+
+# lacr -- same as lac, piped into a raw-color pager
+#   Usage: lacr [PATH...]
+alias lacr="ls -lAh --color=always | less -r"
+
+# ll -- eza long listing with color
+#   Usage: ll [PATH...]
+alias ll="eza -ll --color=always"
+
+# la -- eza long listing including hidden entries, with color
+#   Usage: la [PATH...]
+alias la="eza -lA --color=always"
+
+# l -- eza long listing in a pager
+#   Usage: l [PATH...]
+alias l="eza -ll --color=always | less -R"
+
+# Previous definitions, kept for reference
+#alias ll="ls -la --color=auto"
+#alias la="ls -lA --color=auto"
+
+
+# ==============================================================================
+# 3. GENERIC SHELL HELPERS
+# ==============================================================================
+
+# wd -- print the current directory's name (not the full path)
+#   Usage: wd
+alias wd='echo ${PWD##*/}'
+
+# ask-and-run -- show a command, then run it only after a keypress confirmation
+#   Usage: ask-and-run "COMMAND STRING"
+#   Notes: Reads one key. y/Y runs the command with eval, anything else cancels.
+#          Used by git-add-nas.
+ask-and-run() {
+echo "Command to run:"
+echo $1
+read -n 1 -p "Would you like to proceed? (y/n/c)" ans;
+printf "\n"
+case $ans in
+    y|Y)
+        eval $1
+        ;;
+    *)
+        printf "\nNot running, exiting.\n"
+        ;;
+esac
+}
+
+# ask-and-stop -- prompt "Stop now?" and bail out of a script on y
+#   Usage: ask-and-stop
+#   Notes: On y/Y prints "Stopping." and calls sExit. Anything else prints
+#          "Proceeding..." and returns.
+ask-and-stop() {
+    read -n 1 -p "Stop now? (y/n)" and;
+    printf "\n"
+    case $and in
+        y|Y)
+            echo "Stopping."
+            sExit && return 0
+            ;;
+        *)
+            ;;
+    esac
+    printf "Proceeding...\n"
+}
+
+# die -- abort a script with a failing command
+#   Usage: die
+#   Notes: Turns on errexit (set -e) and runs /bin/false. In an interactive
+#          shell this can close the shell.
+function die() {
+    set -e
+    /bin/false
+}
+
+# sExit -- exit when run as a script, return when sourced or called as a function
+#   Usage: sExit
+#   Notes: Compares basename of $0 and $BASH_SOURCE. Equal means exit 0,
+#          otherwise return 0.
+function sExit() {
+    [ "X$(basename $0 2>/dev/null)" = "X$(basename $BASH_SOURCE)" ] && exit 0 || return 0
+}
+
+
+# ==============================================================================
+# 4. FUZZY SEARCH (rg + fzf)
+# ==============================================================================
+
+# search_blob_cache -- pick a ".d" directory from a cache file with fzf
+#   Usage: search_blob_cache CACHE_FILE
+#   Notes: Extracts every path prefix ending in a ".d" component, de-duplicates
+#          it, and shows only the last path component in fzf. Returns 2 on bad
+#          arguments.
 search_blob_cache() {
   if [ "$#" -ne 1 ]; then
     printf 'Usage: search_blob_cache CACHE_FILE\n' >&2
@@ -12,7 +155,10 @@ search_blob_cache() {
     fzf --delimiter=/ --with-nth=-1
 }
 
-
+# dfzf -- same lookup as search_blob_cache, with an option to show full paths
+#   Usage: dfzf CACHE_FILE [--full-path]
+#   Notes: Without --full-path fzf shows only the last path component.
+#          With --full-path fzf shows the whole path. Returns 2 on bad arguments.
 dfzf() {
   if [ "$#" -lt 1 ] || [ "$#" -gt 2 ] || { [ "$#" -eq 2 ] && [ "$2" != "--full-path" ]; }; then
     printf 'Usage: dfzf CACHE_FILE [--full-path]\n' >&2
@@ -28,28 +174,43 @@ dfzf() {
 }
 
 
-
+# ==============================================================================
+# 5. TMUX
+# ==============================================================================
 
 # tm got replaced with a powerful function in .zshrc
 # alias tm="tmux"
 
+# mosh-to-vm -- open (or reattach to) a tmux session on the "vm" host over mosh
+#   Usage: mosh-to-vm
+#   Notes: Needs a host named `vm` in your SSH config. Session name: vmmosh.
 alias mosh-to-vm='mosh vm -- tmux new -A -s vmmosh'
 
-# Append `-R` to `less` always to render colors
-export LESS='-R'
-alias rgl='rg --color=always'
-
-# Debian/Ubuntu ship the fd-find package's binary as `fdfind` (name clash
-# with an existing mikmod `fd` package), so alias it to the expected name.
-command -v fdfind >/dev/null 2>&1 && alias fd='fdfind'
-
-
-# tmux config block
-
+# tmls -- list tmux sessions
 alias tmls='tmux list-sessions'
+
+# tmw -- list windows of the current tmux session
 alias tmw='tmux list-windows'
+
+# tmp -- list panes of the current tmux window
 alias tmp='tmux list-panes'
 
+# tm -- tmux front end with short subcommands
+#   Usage: tm [SUBCOMMAND] [ARG]
+#   Subcommands
+#     (none)            start tmux
+#     a|attach [NAME]   attach to NAME, or to the latest session
+#     d|detach          detach the client (only inside tmux)
+#     s|sessions        list sessions
+#     w|windows [NAME]  list windows, optionally for session NAME
+#     p|panes [NAME]    list panes, optionally for target NAME
+#     n|new [NAME]      new session, optionally named NAME
+#     nwd               new session named after $PWD, first window "shell"
+#     cwd               create-or-reuse a session named after $PWD and switch/attach
+#     cwd4              like cwd, with windows: shell, run, edit, ai
+#     *                 anything else is passed straight to tmux
+#   Notes: Session names come from basename $PWD with unsafe characters
+#          replaced by "_". Attach refuses to run without a tty.
 tm() {
   _tm_session_name_from_pwd() {
     basename "$PWD" | sed 's/[^A-Za-z0-9_-]/_/g'
@@ -177,19 +338,29 @@ tm() {
   esac
 }
 
-# END: tmux config block
 
+# ==============================================================================
+# 6. CLAUDE CODE
+# ==============================================================================
 
-alias enveda-verify-commit="poetry run pre-commit run --all-files"
-
-alias claude-unhinged="claude --dangerously-skip-permissions"
+# claude -- Claude Code with the skip-permissions mode made available
+#   Usage: claude [ARGS...]
+#   Notes: --allow-dangerously-skip-permissions only makes the mode selectable.
+#          It does not turn it on.
 alias claude="claude --allow-dangerously-skip-permissions"
 
-# yolo [args...] -- claude with my system prompt, all permission checks off.
-# `command claude` bypasses the alias above: zsh expands aliases inside function
-# bodies at definition time, so a bare `claude` here would silently inherit
-# --allow-dangerously-skip-permissions and the flag list would stop being the
-# whole story. Both flags are spelled out instead.
+# claude-unhinged -- Claude Code with all permission checks off
+#   Usage: claude-unhinged [ARGS...]
+#   Notes: Expands through the `claude` alias above, so both flags apply.
+alias claude-unhinged="claude --dangerously-skip-permissions"
+
+# yolo -- Claude Code with my system prompt and all permission checks off
+#   Usage: yolo [ARGS...]
+#   Notes: `command claude` bypasses the alias above. zsh expands aliases inside
+#          function bodies at definition time, so a bare `claude` here would
+#          silently inherit --allow-dangerously-skip-permissions and the flag
+#          list would stop being the whole story. Both flags are spelled out
+#          instead. System prompt file: ~/sys-prompt.md.
 yolo() {
   command claude \
     --allow-dangerously-skip-permissions \
@@ -198,9 +369,11 @@ yolo() {
     "$@"
 }
 
-# tame [args...] -- same system prompt as yolo, but permissions stay on in auto
-# mode. `command claude` for the same reason as above: it also keeps the
-# --allow-dangerously-skip-permissions from the alias out of this one.
+# tame -- Claude Code with my system prompt, permissions on in auto mode
+#   Usage: tame [ARGS...]
+#   Notes: Same system prompt as yolo. `command claude` for the same reason as
+#          yolo: it also keeps --allow-dangerously-skip-permissions from the
+#          alias out of this one.
 tame() {
   command claude \
     --permission-mode auto \
@@ -208,6 +381,7 @@ tame() {
     "$@"
 }
 
+<<<<<<< Updated upstream
 # _rc_name -- session name: <os3>-<host>-<repo>-<branch>, each part truncated.
 # Repo/branch parts are dropped outside a git repo.
 _rc_name() {
@@ -247,14 +421,21 @@ alias ls="eza"
 alias ll="eza -ll --color=always"
 alias la="eza -lA --color=always"
 alias l="eza -ll --color=always | less -R"
+=======
+>>>>>>> Stashed changes
 
-#alias ll="ls -la --color=auto"
-#alias la="ls -lA --color=auto"
+# ==============================================================================
+# 7. GIT
+# ==============================================================================
 
-alias wd='echo ${PWD##*/}'
+# --- Worktrees ----------------------------------------------------------------
 
-# Create a git worktree from a remote or local branch.
-# Supports branch names copied from gitk.
+# wt -- create a git worktree from a local or remote branch
+#   Usage: wt <branch-name | remotes/<remote>/<branch>>
+#   Notes: Accepts branch names copied from gitk (remotes/<remote>/<branch>).
+#          Remote defaults to origin. Fetches the remote first. Creates the
+#          worktree at ../<branch>. Uses the local branch if it exists,
+#          otherwise the remote ref.
 wt() {
   if [ -z "$1" ]; then
     echo "Usage: wt <branch-name | remotes/<remote>/<branch>>"
@@ -290,96 +471,50 @@ wt() {
   fi
 }
 
-nas-create-repo() {
-    USERNAME=dima
-    HOSTS="192.168.1.191"
-    PORT=12022
+# --- gitk shortcuts -----------------------------------------------------------
 
-    REPO=$1
-
-    if [[ -z "${REPO}" ]]; then
-        echo "Empty repo name, stopping"
-        return 1
-    fi
-
-    SCRIPT="cd /volume1/git; mkdir -p ${REPO}; cd ${REPO}; git init --bare;"
-    for HOSTNAME in ${HOSTS} ; do
-        ssh -l ${USERNAME} -p ${PORT} ${HOSTNAME} "${SCRIPT}"
-    done
-
-}
-
-git-add-nas() {
-    dir=$1
-    cmd="git remote add nas ssh://dima@192.168.1.191:12022/volume1/git/${dir}"
-    echo "Cmd: ${cmd}"
-    ask-and-run "${cmd}"
-    #$(ask-and-stop) && return 0
-    #echo "Got throuhgh!"
-}
-
-ask-and-stop() {
-    read -n 1 -p "Stop now? (y/n)" and;
-    printf "\n"
-    case $and in
-        y|Y)
-            echo "Stopping."
-            sExit && return 0 
-            ;;
-        *)
-            ;;
-    esac
-    printf "Proceeding...\n"
-}
-
-function die() {
-    set -e
-    /bin/false
-}
-
-function sExit() {
-    [ "X$(basename $0 2>/dev/null)" = "X$(basename $BASH_SOURCE)" ] && exit 0 || return 0
-}
-
-ask-and-run() {
-echo "Command to run:"
-echo $1
-read -n 1 -p "Would you like to proceed? (y/n/c)" ans;
-printf "\n"
-case $ans in
-    y|Y)
-        eval $1
-        ;;
-    *)
-        printf "\nNot running, exiting.\n"
-        ;;
-esac
-}
-
-gkad() {
-    gitk --all --date-order
-}
-
+# gka -- gitk with all refs
+#   Usage: gka
 gka() {
     gitk --all
 }
 
+# gkad -- gitk with all refs, ordered by commit date
+#   Usage: gkad
+gkad() {
+    gitk --all --date-order
+}
+
+# gkaw -- gitk with all refs, limited to the last N weeks
+#   Usage: gkaw N
 gkaw() {
     gitk --all --since="$1".weeks
 }
 
+# gkam -- gitk with all refs, limited to the last N months
+#   Usage: gkam N
 gkam() {
     gitk --all --since="$1".months
 }
 
+# gkgw -- gitk for refs matching a glob, limited to the last N weeks
+#   Usage: gkgw GLOB N
 gkgw() {
     gitk --glob="$1" --since="$2".weeks
 }
 
+# gkgm -- gitk for refs matching a glob, limited to the last N months
+#   Usage: gkgm GLOB N
 gkgm() {
     gitk --glob="$1" --since="$2".months
 }
 
+# --- Branch inspection and cleanup --------------------------------------------
+
+# git_leafs_local -- list local branches whose tip no other branch reaches
+#   Usage: git_leafs_local
+#   Notes: Tips are computed over all local branches (git rev-list --branches).
+#          Deleting a listed branch can make its commits unreachable.
 git_leafs_local() {
         echo "** Below is list of tip branches a.k.a. final nodes."
         echo "** These aren't reachable from any other branches."
@@ -392,6 +527,10 @@ git_leafs_local() {
         echo "** end of list"
 }
 
+# git_leafs_origin -- same as git_leafs_local, with tips computed over origin
+#   Usage: git_leafs_origin
+#   Notes: Tips come from git rev-list --remotes=origin. The branch names that
+#          get checked still come from `git branch -v` (local branches).
 git_leafs_origin() {
         echo "** Below is list of tip branches a.k.a. final nodes."
         echo "** These aren't reachable from any other branches."
@@ -404,23 +543,11 @@ git_leafs_origin() {
         echo "** end of list"
 }
 
-git7zbr() {
-	echo "** git 7z a specific branch **"
-	
-	if [ $# -eq 0 ]; then
-		echo "No arguments. Need 1 arg - branch name"
-		return
-	fi
-
-	REPO_NAME=$(basename $(pwd)) && \
-	ZIP_NAME=$REPO_NAME.7z && \
-	git clone -b $1 . temp_repo && \
-	7z a -r $ZIP_NAME ./temp_repo && \
-	7z rn $ZIP_NAME temp_repo $REPO_NAME && \
-	rm -rf temp_repo && \
-	mv $ZIP_NAME ..
-}
-
+# git-rm-remote-ref -- delete a branch on a remote
+#   Usage: git-rm-remote-ref remotes/<remote>/<branch>
+#   Notes: Also accepts refs/remotes/<remote>/<branch> and <remote>/<branch>.
+#          Runs `git push -d <remote> <branch>`. Returns 2 when the ref cannot
+#          be parsed.
 git-rm-remote-ref() {
   local ref="$1"
   local remote branch
@@ -443,3 +570,79 @@ git-rm-remote-ref() {
 
   git push -d "$remote" "$branch"
 }
+
+# --- Archiving ----------------------------------------------------------------
+
+# git7zbr -- archive one branch of the current repo as a 7z file
+#   Usage: git7zbr BRANCH
+#   Notes: Clones BRANCH into ./temp_repo, zips it as <repo>.7z with the top
+#          folder renamed to the repo name, deletes temp_repo, and moves the
+#          archive to the parent directory. Needs 7z.
+git7zbr() {
+	echo "** git 7z a specific branch **"
+
+	if [ $# -eq 0 ]; then
+		echo "No arguments. Need 1 arg - branch name"
+		return
+	fi
+
+	REPO_NAME=$(basename $(pwd)) && \
+	ZIP_NAME=$REPO_NAME.7z && \
+	git clone -b $1 . temp_repo && \
+	7z a -r $ZIP_NAME ./temp_repo && \
+	7z rn $ZIP_NAME temp_repo $REPO_NAME && \
+	rm -rf temp_repo && \
+	mv $ZIP_NAME ..
+}
+
+
+# ==============================================================================
+# 8. NAS (Synology git host)
+#    Host 192.168.1.191, SSH port 12022, user dima, repos under /volume1/git
+# ==============================================================================
+
+# nas-create-repo -- create a bare git repo on the NAS
+#   Usage: nas-create-repo REPO_NAME
+#   Notes: SSHes to each host in HOSTS and runs mkdir -p + git init --bare in
+#          /volume1/git/REPO_NAME. Stops with status 1 on an empty name.
+nas-create-repo() {
+    USERNAME=dima
+    HOSTS="192.168.1.191"
+    PORT=12022
+
+    REPO=$1
+
+    if [[ -z "${REPO}" ]]; then
+        echo "Empty repo name, stopping"
+        return 1
+    fi
+
+    SCRIPT="cd /volume1/git; mkdir -p ${REPO}; cd ${REPO}; git init --bare;"
+    for HOSTNAME in ${HOSTS} ; do
+        ssh -l ${USERNAME} -p ${PORT} ${HOSTNAME} "${SCRIPT}"
+    done
+
+}
+
+# git-add-nas -- add the NAS as remote "nas" for a repo directory name
+#   Usage: git-add-nas DIR_NAME
+#   Notes: Builds `git remote add nas ssh://dima@192.168.1.191:12022/volume1/git/DIR_NAME`
+#          and runs it through ask-and-run, so you confirm first.
+git-add-nas() {
+    dir=$1
+    cmd="git remote add nas ssh://dima@192.168.1.191:12022/volume1/git/${dir}"
+    echo "Cmd: ${cmd}"
+    ask-and-run "${cmd}"
+    #$(ask-and-stop) && return 0
+    #echo "Got throuhgh!"
+}
+
+
+# ==============================================================================
+# 9. ENVEDA
+# ==============================================================================
+
+# enveda-verify-commit -- run all pre-commit hooks on every file
+#   Usage: enveda-verify-commit
+#   Notes: Runs `poetry run pre-commit run --all-files`. Run from a repo root.
+alias enveda-verify-commit="poetry run pre-commit run --all-files"
